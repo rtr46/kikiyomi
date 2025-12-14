@@ -1,4 +1,5 @@
 # kikiyomi
+![player_screenshot](https://github.com/user-attachments/assets/6cd3ef88-8f87-4b43-a946-38864b3d436f)
 
 **kikiyomi** is a simple, single-file audiobook player designed for japanese language learners. it runs entirely in your browser and works offline once loaded.
 
@@ -9,6 +10,7 @@
 - **subtitle support:** drag and drop .srt files alongside your audio.
 - **gap filling:** automatically displays the previous line during silence.
 - **gamepad support:** control playback with a game controller.
+![home_screenshot](https://github.com/user-attachments/assets/a85130e2-1fab-4253-9900-222c2460a370)
 
 ## how to use
 
