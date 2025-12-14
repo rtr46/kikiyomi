@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#121212">
+    <title>kikiyomi audiobook player</title>
+    <style>
+        :root { 
+            --bg: #121212; --surface: #1e1e1e; --primary: #bb86fc; --text: #b0b0b0; --text-active: #ffffff; --sec: #03dac6; 
+            --font-ui: system-ui, -apple-system, sans-serif;
+            --font-reader: system-ui, -apple-system, sans-serif;
+            --font-size-base: 36px;
+            --active-weight: bold;
+        }
+        * { box-sizing: border-box; }
+        
+        body, button, header, .modal, .drop-zone, input[type=range] { 
+            user-select: none; -webkit-user-select: none; 
+        }
+        
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font-ui); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        
+        /* --- UTILS --- */
+        .hidden { display: none !important; }
+        .btn { background: var(--surface); color: var(--text); border: 1px solid #333; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; transition: background 0.2s; font-family: var(--font-ui); }
+        .btn:active { background: #333; transform: scale(0.98); }
+        .btn-primary { background: var(--primary); color: #000; font-weight: bold; border: none; }
+        .icon-btn { background: transparent; border: none; color: #888; font-size: 1.3rem; cursor: pointer; padding: 5px; margin-left: 5px; }
+        .icon-btn:hover { color: #fff; }
+
+        /* --- MODALS & OVERLAYS --- */
+        .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index: 200; display:flex; justify-content:center; align-items:center; backdrop-filter: blur(2px); }
+        .modal { background: var(--surface); padding: 25px; border-radius: 12px; width: 90%; max-width: 450px; border: 1px solid #333; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .setting-row { margin-bottom: 20px; display:flex; justify-content: space-between; align-items: center; }
+        .setting-row label { color: #e0e0e0; font-size: 0.9rem; }
+        select, input[type=number] { padding: 8px; background: #121212; border: 1px solid #333; color: #fff; border-radius: 4px; }
+        
+        /* Loading Spinner */
+        #loading-overlay { z-index: 300; flex-direction: column; }
+        .spinner { width: 50px; height: 50px; border: 5px solid #333; border-top: 5px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Key Table */
+        .key-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        .key-table td { padding: 8px 0; border-bottom: 1px solid #333; }
+        .key-table td:first-child { color: var(--primary); font-weight: bold; }
+        .key-table td:last-child { text-align: right; color: #aaa; }
+
+        /* --- VIEW: LIBRARY --- */
+        #view-library { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; max-width: 800px; margin: 0 auto; width: 100%; }
+        .drop-zone { width: 100%; height: 200px; border: 2px dashed #444; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #1a1a1a; margin-bottom: 30px; transition: border-color 0.2s; }
+        .drop-zone.dragover { border-color: var(--primary); background: #222; }
+        .resume-card { width: 100%; background: #252525; padding: 20px; border-radius: 12px; margin-bottom: 30px; border-left: 5px solid var(--sec); box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #333; cursor: pointer; width: 100%; transition: background 0.2s; }
+        .history-item:hover { background: #1f1f1f; }
+        .progress-bar-mini { height: 4px; background: #333; width: 100%; margin-top: 8px; border-radius: 2px; }
+        .progress-fill-mini { height: 100%; background: var(--sec); width: 0%; border-radius: 2px; }
+        .version-footer { margin-top: auto; padding-top: 20px; color: #444; font-size: 0.8rem; font-family: monospace; }
+
+        /* --- VIEW: PLAYER --- */
+        #view-player { flex: 1; display: flex; flex-direction: column; height: 100%; }
+        header { padding: 10px 20px; background: var(--surface); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #333; z-index: 10; }
+        
+        /* Content Area */
+        #player-content { flex: 1; display: flex; overflow: hidden; position: relative; }
+        
+        /* Subtitles List */
+        #sub-list { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 50vh 0; 
+            margin: 0; 
+            list-style: none; 
+            scroll-behavior: auto; 
+            background: #121212; 
+        }
+        #sub-list li { 
+            padding: 15px 20px; 
+            color: #555; 
+            cursor: pointer; 
+            font-size: var(--font-size-base); 
+            font-family: var(--font-reader); 
+            line-height: 1.5; 
+            text-align: center; 
+            transition: color 0.1s, transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+            max-width: 95%;
+            margin: 0 auto;
+            transform-origin: center center;
+            user-select: text; 
+            -webkit-user-select: text;
+        }
+        #sub-list li:hover { color: #888; }
+        
+        /* The Active Line */
+        #sub-list li.active { 
+            color: var(--text-active); 
+            font-weight: var(--active-weight);
+            transform: scale(1.05); 
+            text-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        
+        /* Chapters Sidebar */
+        #chapter-list { width: 300px; background: #181818; border-left: 1px solid #333; overflow-y: auto; display: none; position: absolute; right: 0; top: 0; height: 100%; z-index: 20; box-shadow: -5px 0 15px rgba(0,0,0,0.5); }
+        #chapter-list.open { display: block; }
+        .chap-item { padding: 12px; border-bottom: 1px solid #252525; font-size: 0.9rem; cursor: pointer; color: #aaa; }
+        .chap-item:hover { background: #222; color: white; }
+        .chap-empty { padding: 30px 20px; color: #666; text-align: center; font-size: 0.9rem; line-height: 1.6; }
+
+        /* Controls */
+        #controls { background: var(--surface); padding: 15px 20px; padding-bottom: 30px; display: flex; flex-direction: column; gap: 15px; border-top: 1px solid #333; }
+        
+        .timeline-container { display: flex; align-items: center; gap: 15px; color: #888; font-family: monospace; font-size: 0.9rem; }
+        input[type=range] { flex: 1; cursor: pointer; accent-color: var(--primary); height: 4px; background: #333; border:none; border-radius: 2px; }
+        
+        .buttons-row { display: flex; justify-content: center; gap: 25px; align-items: center; }
+        .round-btn { width: 50px; height: 50px; border-radius: 50%; border: none; background: #2a2a2a; color: #ddd; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.1s; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .round-btn:active { transform: scale(0.95); background: #444; }
+        .round-btn.main { width: 68px; height: 68px; background: #e0e0e0; color: #121212; font-size: 1.8rem; box-shadow: 0 4px 10px rgba(255,255,255,0.1); }
+
+        /* --- VIEW: FOCUS MODE --- */
+        #view-focus { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px; text-align: center; }
+        #focus-text { 
+            font-family: var(--font-reader); 
+            font-size: clamp(2rem, 5vw, 4.5rem); 
+            font-weight: var(--active-weight);
+            color: #e0e0e0; 
+            line-height: 1.4; 
+            max-width: 1200px;
+            user-select: text; 
+            -webkit-user-select: text;
+        }
+        #focus-hint { position: absolute; bottom: 20px; color: #333; font-size: 0.8rem; font-family: sans-serif; opacity: 0; transition: opacity 0.5s; user-select: none; }
+        #view-focus:hover #focus-hint { opacity: 1; }
+
+        @media (max-width: 600px) {
+            #chapter-list { width: 85%; }
+            #sub-list li.active { transform: scale(1.05); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- --- LOADING OVERLAY --- -->
+    <div id="loading-overlay" class="modal-overlay hidden">
+        <div class="spinner"></div>
+        <div style="color:white; font-weight:bold; letter-spacing:1px;">Processing...</div>
+    </div>
+
+    <!-- --- SETTINGS MODAL --- -->
+    <div id="modal-settings" class="modal-overlay hidden" onclick="if(event.target===this) App.toggleModal('modal-settings')">
+        <div class="modal">
+            <h2 style="margin-top:0; color: var(--primary);">Settings</h2>
+            
+            <div class="setting-row">
+                <label>Font Family</label>
+                <select id="opt-font" onchange="App.applySettings()">
+                    <option value="system-ui, -apple-system, sans-serif">System Sans</option>
+                    <option value="'Times New Roman', serif">Serif</option>
+                    <option value="'Hiragino Mincho ProN', 'Yu Mincho', serif">Yu Mincho (JP)</option>
+                    <option value="'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif">Yu Gothic (JP)</option>
+                    <option value="'Meiryo', sans-serif">Meiryo (JP)</option>
+                    <option value="'MS Gothic', monospace">MS Gothic (JP)</option>
+                </select>
+            </div>
+            
+            <div class="setting-row">
+                <label>Font Size (px)</label>
+                <div style="flex:1; margin-left:15px; display:flex; align-items:center; gap:10px;">
+                    <input type="number" id="opt-size" min="12" max="80" value="36" onchange="App.applySettings()" style="width:70px">
+                </div>
+            </div>
+
+            <div class="setting-row">
+                <label>Bold Active Line</label>
+                <input type="checkbox" id="opt-bold" checked onchange="App.applySettings()" style="width:20px; height:20px; accent-color: var(--primary);">
+            </div>
+
+            <div class="setting-row">
+                <label>Fill Silence (Gaps)</label>
+                <input type="checkbox" id="opt-fill" checked onchange="App.applySettings()" style="width:20px; height:20px; accent-color: var(--primary);">
+            </div>
+
+            <div style="text-align: right; margin-top:20px;">
+                <button class="btn btn-primary" onclick="App.toggleModal('modal-settings')">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- --- HELP MODAL --- -->
+    <div id="modal-help" class="modal-overlay hidden" onclick="if(event.target===this) App.toggleModal('modal-help')">
+        <div class="modal">
+            <h2 style="margin-top:0; color: var(--primary);">Controls</h2>
+            <table class="key-table">
+                <tr><td>Play / Pause</td><td>Space / W / (GP: A)</td></tr>
+                <tr><td>Replay Line</td><td>S / Down / (GP: Down)</td></tr>
+                <tr><td>Previous Line</td><td>A / Left / (GP: Left)</td></tr>
+                <tr><td>Next Line</td><td>D / Right / (GP: Right)</td></tr>
+                <tr><td>Toggle Focus</td><td>F / (GP: Y)</td></tr>
+                <tr><td>Exit Focus</td><td>Esc / Hold Click</td></tr>
+            </table>
+            <div style="text-align: right; margin-top:20px;">
+                <button class="btn btn-primary" onclick="App.toggleModal('modal-help')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- --- LIBRARY VIEW --- -->
+    <div id="view-library">
+        <h1 style="color: var(--primary); letter-spacing: 2px; font-weight: normal;">kikiyomi</h1>
+        
+        <div id="resume-section" class="resume-card hidden">
+            <h3 style="margin-top:0; color:#aaa; font-size:0.7rem; letter-spacing:1px; text-transform:uppercase;">Continue Listening</h3>
+            <div id="resume-title" style="font-size: 1.4rem; font-weight: bold; margin-bottom: 10px; color:white;">...</div>
+            <div style="display:flex; gap:10px; align-items: center;">
+                <div class="progress-bar-mini" style="margin:0; flex:1;"><div id="resume-bar" class="progress-fill-mini"></div></div>
+                <span id="resume-pct" style="font-size:0.8rem; color:#aaa;">0%</span>
+            </div>
+            <button class="btn btn-primary" style="margin-top: 15px; width:100%" onclick="App.resumeActive()">Resume</button>
+        </div>
+
+        <div id="drop-zone" class="drop-zone">
+            <div style="font-size: 3rem; margin-bottom: 10px; opacity: 0.7;">🎧</div>
+            <div style="color: #e0e0e0; font-weight: bold; font-size: 1.1rem;">Open/Drop Audio File</div>
+            <div style="color: #666; font-size: 0.8rem; margin-top:5px;">.m4b, .mp3 + .srt (optional)</div>
+            <input type="file" id="file-input" hidden multiple accept=".mp3,.m4b,.aac,.srt,.json">
+        </div>
+
+        <h3 style="align-self: flex-start; margin-bottom: 10px; color: #555; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">History</h3>
+        <div id="history-list" style="width:100%"></div>
+        
+        <div class="version-footer">v0.0.1</div>
+    </div>
+
+    <!-- --- PLAYER VIEW --- -->
+    <div id="view-player" class="hidden">
+        <header>
+            <button class="btn" onclick="App.showLibrary()">← Home</button>
+            <div id="player-title" style="font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 40%; font-size: 0.9rem; color:#888;">...</div>
+            <div style="display:flex; align-items: center;">
+                <button class="btn" onclick="App.toggleChapters()" style="margin-right:5px">Chapters</button>
+                <button class="btn" onclick="App.toggleFocusMode()" style="margin-right:5px">Focus</button>
+                <button class="icon-btn" onclick="App.toggleModal('modal-settings')" title="Settings">⚙</button>
+                <button class="icon-btn" onclick="App.toggleModal('modal-help')" title="Controls">?</button>
+            </div>
+        </header>
+
+        <div id="player-content">
+            <ul id="sub-list"></ul>
+            <div id="chapter-list"></div>
+        </div>
+
+        <div id="controls">
+            <div class="timeline-container">
+                <span id="t-curr">00:00</span>
+                <input type="range" id="seek-bar" value="0" step="0.1">
+                <span id="t-total">00:00</span>
+            </div>
+            <div class="buttons-row">
+                <button class="round-btn" onclick="Player.prevSub()" title="Prev Line (A)">I&lt;</button>
+                <button class="round-btn" onclick="Player.replaySub()" title="Replay Line (S)">⟲</button>
+                <button class="round-btn main" id="btn-play" onclick="Player.togglePlay()" title="Play/Pause (Space)">▶</button>
+                <button class="round-btn" onclick="Player.nextSub()" title="Next Line (D)">&gt;I</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- --- FOCUS MODE VIEW --- -->
+    <div id="view-focus" class="hidden">
+        <div id="focus-text">...</div>
+        <div id="focus-hint">Tap Center: Play • Tap Sides: Seek • Hold/Esc: Exit</div>
+    </div>
+
+    <audio id="audio-el" hidden></audio>
+
+<script>
+/* ---------------- 1. DATABASE ---------------- */
+const DB = {
+    db: null,
+    async init() {
+        return new Promise((resolve, reject) => {
+            const req = indexedDB.open('KikiYomiDB', 1);
+            req.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains('metadata')) db.createObjectStore('metadata', { keyPath: 'id' });
+                if (!db.objectStoreNames.contains('media')) db.createObjectStore('media', { keyPath: 'key' });
+            };
+            req.onsuccess = (e) => { this.db = e.target.result; resolve(); };
+            req.onerror = (e) => reject(e);
+        });
+    },
+    async saveMetadata(book) {
+        const tx = this.db.transaction('metadata', 'readwrite');
+        tx.objectStore('metadata').put(book);
+        return new Promise(r => tx.oncomplete = r);
+    },
+    async getAllMetadata() {
+        return new Promise(r => {
+            const req = this.db.transaction('metadata').objectStore('metadata').getAll();
+            req.onsuccess = () => r(req.result);
+        });
+    },
+    async setActiveAudio(blob) {
+        const tx = this.db.transaction('media', 'readwrite');
+        tx.objectStore('media').put({ key: 'active', blob: blob });
+        return new Promise(r => tx.oncomplete = r);
+    },
+    async getActiveAudio() {
+        return new Promise(r => {
+            const req = this.db.transaction('media').objectStore('media').get('active');
+            req.onsuccess = () => r(req.result ? req.result.blob : null);
+        });
+    }
+};
+
+/* ---------------- 2. APP STATE ---------------- */
+const App = {
+    currentBook: null,
+    activeAudioBlob: null,
+    settings: { font: '', size: 36, fillGap: true, bold: true },
+
+    async init() {
+        await DB.init();
+        this.loadSettings();
+        this.renderLibrary();
+        
+        // Drag & Drop
+        const dz = document.getElementById('drop-zone');
+        dz.onclick = () => document.getElementById('file-input').click();
+        document.getElementById('file-input').onchange = (e) => this.handleFiles(e.target.files);
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(n => {
+            document.body.addEventListener(n, e => { e.preventDefault(); e.stopPropagation(); }, false);
+        });
+        document.body.addEventListener('dragover', () => dz.classList.add('dragover'));
+        document.body.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+        document.body.addEventListener('drop', (e) => {
+            dz.classList.remove('dragover');
+            this.handleFiles(e.dataTransfer.files);
+        });
+
+        Input.init();
+    },
+
+    loadSettings() {
+        this.settings.font = localStorage.getItem('ky_font') || "system-ui, -apple-system, sans-serif";
+        this.settings.size = parseInt(localStorage.getItem('ky_size') || "36");
+        this.settings.fillGap = localStorage.getItem('ky_fill') !== "false"; 
+        this.settings.bold = localStorage.getItem('ky_bold') !== "false";
+
+        // Update UI inputs
+        document.getElementById('opt-font').value = this.settings.font;
+        document.getElementById('opt-size').value = this.settings.size;
+        document.getElementById('opt-fill').checked = this.settings.fillGap;
+        document.getElementById('opt-bold').checked = this.settings.bold;
+        
+        this.applySettings();
+    },
+
+    applySettings() {
+        this.settings.font = document.getElementById('opt-font').value;
+        this.settings.size = parseInt(document.getElementById('opt-size').value);
+        this.settings.fillGap = document.getElementById('opt-fill').checked;
+        this.settings.bold = document.getElementById('opt-bold').checked;
+
+        document.documentElement.style.setProperty('--font-reader', this.settings.font);
+        document.documentElement.style.setProperty('--font-size-base', this.settings.size + 'px');
+        document.documentElement.style.setProperty('--active-weight', this.settings.bold ? 'bold' : 'normal');
+        
+        localStorage.setItem('ky_font', this.settings.font);
+        localStorage.setItem('ky_size', this.settings.size);
+        localStorage.setItem('ky_fill', this.settings.fillGap);
+        localStorage.setItem('ky_bold', this.settings.bold);
+
+        // Force re-render of current state
+        if (Player.meta) Player.syncSub(); 
+    },
+
+    toggleModal(id) {
+        document.getElementById(id).classList.toggle('hidden');
+    },
+
+    async renderLibrary() {
+        document.getElementById('view-library').classList.remove('hidden');
+        document.getElementById('view-player').classList.add('hidden');
+        document.getElementById('view-focus').classList.add('hidden');
+
+        const allBooks = await DB.getAllMetadata();
+        allBooks.sort((a, b) => b.lastPlayed - a.lastPlayed);
+
+        const cachedAudio = await DB.getActiveAudio();
+        const activeId = localStorage.getItem('activeBookId');
+        const activeMeta = allBooks.find(b => b.id === activeId);
+
+        const resumeSection = document.getElementById('resume-section');
+        const historyList = document.getElementById('history-list');
+        historyList.innerHTML = '';
+
+        if (cachedAudio && activeMeta) {
+            resumeSection.classList.remove('hidden');
+            document.getElementById('resume-title').textContent = activeMeta.title;
+            const pct = activeMeta.duration > 0 ? (activeMeta.progress / activeMeta.duration * 100).toFixed(1) : 0;
+            document.getElementById('resume-bar').style.width = pct + '%';
+            document.getElementById('resume-pct').textContent = pct + '%';
+        } else {
+            resumeSection.classList.add('hidden');
+        }
+
+        allBooks.forEach(book => {
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            const pct = book.duration > 0 ? (book.progress / book.duration * 100).toFixed(1) : 0;
+            div.innerHTML = `
+                <div style="flex:1">
+                    <div style="font-weight:bold; font-size:1.1rem; margin-bottom:5px; color:#e0e0e0;">${book.title}</div>
+                    <div style="color:#666; font-size:0.8rem;">${this.fmtTime(book.progress)} / ${this.fmtTime(book.duration)}</div>
+                    <div class="progress-bar-mini"><div class="progress-fill-mini" style="width:${pct}%"></div></div>
+                </div>
+            `;
+            div.onclick = () => this.loadBookFromHistory(book);
+            historyList.appendChild(div);
+        });
+    },
+
+    async handleFiles(files) {
+        document.getElementById('loading-overlay').classList.remove('hidden');
+        setTimeout(async () => {
+            try {
+                let audioFile = null, srtFile = null, jsonFile = null;
+                for (let f of files) {
+                    if (f.name.match(/\.(mp3|m4b|aac)$/i)) audioFile = f;
+                    if (f.name.match(/\.srt$/i)) srtFile = f;
+                    if (f.name.match(/\.json$/i)) jsonFile = f;
+                }
+
+                if (audioFile) {
+                    const id = "b_" + Math.abs(this.hashCode(audioFile.name));
+                    let meta = (await DB.getAllMetadata()).find(b => b.id === id);
+                    if (!meta) {
+                        meta = {
+                            id: id,
+                            title: audioFile.name.replace(/\.(mp3|m4b|aac)$/i, ''),
+                            duration: 0, progress: 0, lastPlayed: Date.now(),
+                            subs: [], chapters: []
+                        };
+                    }
+
+                    if (srtFile) meta.subs = await this.parseSrt(srtFile);
+                    if (jsonFile) meta.chapters = await this.parseJsonChapters(jsonFile);
+
+                    await DB.setActiveAudio(audioFile);
+                    await DB.saveMetadata(meta);
+                    localStorage.setItem('activeBookId', id);
+
+                    this.currentBook = meta;
+                    this.activeAudioBlob = audioFile;
+                    this.launchPlayer();
+                } else {
+                    alert("Please drop the Audio File.");
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Error processing file.");
+            } finally {
+                document.getElementById('loading-overlay').classList.add('hidden');
+            }
+        }, 50);
+    },
+
+    async loadBookFromHistory(book) {
+        const activeId = localStorage.getItem('activeBookId');
+        if (activeId === book.id) {
+            const blob = await DB.getActiveAudio();
+            if (blob) {
+                this.currentBook = book;
+                this.activeAudioBlob = blob;
+                this.launchPlayer();
+                return;
+            }
+        }
+        alert(`File not cached. Please drag & drop "${book.title}" audio file again.`);
+    },
+
+    async resumeActive() {
+        const activeId = localStorage.getItem('activeBookId');
+        if(!activeId) return;
+        const all = await DB.getAllMetadata();
+        const meta = all.find(b => b.id === activeId);
+        const blob = await DB.getActiveAudio();
+        if(meta && blob) {
+            this.currentBook = meta;
+            this.activeAudioBlob = blob;
+            this.launchPlayer();
+        }
+    },
+
+    launchPlayer() {
+        document.getElementById('view-library').classList.add('hidden');
+        document.getElementById('view-player').classList.remove('hidden');
+        Player.load(this.currentBook, this.activeAudioBlob);
+    },
+
+    showLibrary() {
+        Player.pause();
+        document.getElementById('sub-list').innerHTML = '';
+        this.renderLibrary();
+    },
+
+    toggleFocusMode() {
+        const el = document.getElementById('view-focus');
+        el.classList.toggle('hidden');
+        if (!el.classList.contains('hidden')) {
+            document.documentElement.requestFullscreen().catch(e=>{});
+        } else {
+            if (document.fullscreenElement) document.exitFullscreen();
+        }
+    },
+
+    toggleChapters() {
+        document.getElementById('chapter-list').classList.toggle('open');
+    },
+
+    hashCode(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = ((hash << 5) - hash) + str.charCodeAt(i);
+            hash |= 0;
+        }
+        return hash;
+    },
+
+    async parseSrt(file) {
+        const text = await file.text();
+        const pattern = /(\d+)\n(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})\n((?:(?!\d+\n).)*)/gs;
+        const matches = [...text.replace(/\r\n/g, '\n').matchAll(pattern)];
+        return matches.map(m => ({
+            start: this.timeToSec(m[2]),
+            end: this.timeToSec(m[3]),
+            text: m[4].trim()
+        }));
+    },
+
+    async parseJsonChapters(file) {
+        try { return JSON.parse(await file.text()); } catch(e) { return []; }
+    },
+
+    timeToSec(tStr) {
+        const [h, m, s] = tStr.replace(',', '.').split(':');
+        return parseFloat(h)*3600 + parseFloat(m)*60 + parseFloat(s);
+    },
+
+    fmtTime(s) {
+        if (isNaN(s)) return "00:00";
+        const h = Math.floor(s / 3600);
+        const m = Math.floor((s % 3600) / 60);
+        const sec = Math.floor(s % 60);
+        if (h > 0) return `${h}:${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
+        return `${m}:${sec.toString().padStart(2,'0')}`;
+    }
+};
+
+/* ---------------- 3. PLAYER LOGIC ---------------- */
+const Player = {
+    audio: document.getElementById('audio-el'),
+    meta: null,
+    subs: [],
+    
+    elTitle: document.getElementById('player-title'),
+    elSubList: document.getElementById('sub-list'),
+    elSeek: document.getElementById('seek-bar'),
+    elTCurr: document.getElementById('t-curr'),
+    elTTotal: document.getElementById('t-total'),
+    elBtnPlay: document.getElementById('btn-play'),
+    elFocusText: document.getElementById('focus-text'),
+    elChapList: document.getElementById('chapter-list'),
+
+    load(meta, blob) {
+        this.meta = meta;
+        this.subs = meta.subs || [];
+        this.elTitle.textContent = meta.title;
+        this.audio.src = URL.createObjectURL(blob);
+        this.audio.currentTime = meta.progress || 0;
+        
+        this.renderSubs();
+        this.renderChapters();
+
+        this.audio.onloadedmetadata = () => {
+            this.elSeek.max = this.audio.duration;
+            this.elTTotal.textContent = App.fmtTime(this.audio.duration);
+            if (this.meta.duration !== this.audio.duration) {
+                this.meta.duration = this.audio.duration;
+                this.save();
+            }
+        };
+
+        this.audio.ontimeupdate = () => {
+            if (!this.isSeeking) {
+                this.elSeek.value = this.audio.currentTime;
+                this.elTCurr.textContent = App.fmtTime(this.audio.currentTime);
+            }
+            this.syncSub();
+            if (Math.floor(this.audio.currentTime) % 10 === 0) this.save();
+        };
+
+        this.audio.onplay = () => this.updateBtn();
+        this.audio.onpause = () => { this.updateBtn(); this.save(); };
+    },
+
+    renderSubs() {
+        this.elSubList.innerHTML = '';
+        if (this.subs.length === 0) {
+            this.elSubList.innerHTML = '<li style="padding:40px; text-align:center;">No Subtitles Loaded</li>';
+            return;
+        }
+        const frag = document.createDocumentFragment();
+        this.subs.forEach((s, i) => {
+            const li = document.createElement('li');
+            li.textContent = s.text;
+            li.id = `s-${i}`;
+            li.onclick = () => { 
+                this.audio.currentTime = s.start + 0.01; 
+                this.audio.play(); 
+            };
+            frag.appendChild(li);
+        });
+        this.elSubList.appendChild(frag);
+    },
+
+    renderChapters() {
+        this.elChapList.innerHTML = '';
+        if (!this.meta.chapters || this.meta.chapters.length === 0) {
+            this.elChapList.innerHTML = '<br><br><br><br><br><br><div class="chap-empty">No Chapters Loaded.<br><br>Chapter support coming in future version</div>';
+            return;
+        }
+        this.meta.chapters.forEach(c => {
+            const div = document.createElement('div');
+            div.className = 'chap-item';
+            div.textContent = `${App.fmtTime(c.start || c.time)} - ${c.title}`;
+            div.onclick = () => {
+                this.audio.currentTime = (c.start || c.time);
+                this.audio.play();
+                App.toggleChapters();
+            };
+            this.elChapList.appendChild(div);
+        });
+    },
+
+    activeIndex: -1,
+    syncSub() {
+        const t = this.audio.currentTime;
+        let idx = -1;
+        
+        for (let i = 0; i < this.subs.length; i++) {
+            if (t >= this.subs[i].start && t <= this.subs[i].end) {
+                idx = i;
+                break;
+            }
+        }
+
+        if (idx === -1 && App.settings.fillGap) {
+            for (let i = 0; i < this.subs.length; i++) {
+                const nextStart = (i < this.subs.length - 1) ? this.subs[i+1].start : Number.MAX_VALUE;
+                if (t >= this.subs[i].start && t < nextStart) {
+                    idx = i;
+                    break;
+                }
+            }
+        }
+
+        if (idx !== this.activeIndex) {
+            if (this.activeIndex !== -1) document.getElementById(`s-${this.activeIndex}`)?.classList.remove('active');
+            this.activeIndex = idx;
+            
+            let text = "...";
+            if (idx !== -1) {
+                const el = document.getElementById(`s-${idx}`);
+                if(el) {
+                    el.classList.add('active');
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    text = this.subs[idx].text;
+                }
+            }
+            this.elFocusText.textContent = text;
+        }
+    },
+
+    pause() { this.audio.pause(); },
+    togglePlay() { this.audio.paused ? this.audio.play() : this.audio.pause(); },
+    
+    prevSub() {
+        let target = -1;
+        if (this.activeIndex > -1) {
+            const currentSub = this.subs[this.activeIndex];
+            if (this.audio.currentTime > currentSub.start + 2) {
+                target = this.activeIndex;
+            } else {
+                target = Math.max(0, this.activeIndex - 1);
+            }
+        } else {
+            const t = this.audio.currentTime;
+            for(let i=0; i<this.subs.length; i++) {
+                if (this.subs[i].end < t) target = i;
+                else break;
+            }
+        }
+        
+        if (target > -1) {
+            this.audio.currentTime = this.subs[target].start + 0.01;
+        }
+    },
+    
+    nextSub() {
+        let target = -1;
+        if (this.activeIndex > -1) {
+            target = Math.min(this.subs.length - 1, this.activeIndex + 1);
+        } else {
+            const t = this.audio.currentTime;
+            for(let i=0; i<this.subs.length; i++) {
+                if (this.subs[i].start > t) {
+                    target = i;
+                    break;
+                }
+            }
+        }
+
+        if (target > -1) {
+            this.audio.currentTime = this.subs[target].start + 0.01;
+        }
+    },
+
+    replaySub() {
+        if (this.activeIndex > -1) {
+            this.audio.currentTime = this.subs[this.activeIndex].start + 0.01;
+            if (this.audio.paused) this.audio.play();
+        } else {
+            const t = this.audio.currentTime;
+            let last = -1;
+            for(let i=0; i<this.subs.length; i++) {
+                if (this.subs[i].start <= t) last = i;
+                else break;
+            }
+            if (last > -1) {
+                this.audio.currentTime = this.subs[last].start + 0.01;
+                if(this.audio.paused) this.audio.play();
+            }
+        }
+    },
+
+    updateBtn() { this.elBtnPlay.textContent = this.audio.paused ? "▶" : "❚❚"; },
+    save() {
+        if (!this.meta) return;
+        this.meta.progress = this.audio.currentTime;
+        this.meta.lastPlayed = Date.now();
+        DB.saveMetadata(this.meta);
+    },
+    isSeeking: false
+};
+
+// Seek Bar
+const seekBar = document.getElementById('seek-bar');
+seekBar.addEventListener('mousedown', () => Player.isSeeking = true);
+seekBar.addEventListener('touchstart', () => Player.isSeeking = true);
+seekBar.addEventListener('change', (e) => { Player.audio.currentTime = e.target.value; Player.isSeeking = false; });
+seekBar.addEventListener('input', (e) => document.getElementById('t-curr').textContent = App.fmtTime(e.target.value));
+
+// Focus Mode Input
+const focusView = document.getElementById('view-focus');
+let longPressTimer;
+const startFocusAction = () => { longPressTimer = setTimeout(() => App.toggleFocusMode(), 1000); };
+const endFocusAction = () => clearTimeout(longPressTimer);
+
+focusView.addEventListener('mousedown', startFocusAction);
+focusView.addEventListener('mouseup', endFocusAction);
+focusView.addEventListener('touchstart', startFocusAction);
+focusView.addEventListener('touchend', endFocusAction);
+
+focusView.addEventListener('click', (e) => {
+    if (window.getSelection().toString().length > 0) return;
+
+    const w = window.innerWidth;
+    const x = e.clientX;
+    if (x > w * 0.3 && x < w * 0.7) Player.togglePlay();
+    else if (x < w * 0.3) Player.prevSub();
+    else Player.nextSub();
+});
+
+document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement && !focusView.classList.contains('hidden')) {
+        focusView.classList.add('hidden');
+    }
+});
+
+/* ---------------- 4. INPUT MANAGER ---------------- */
+const Input = {
+    btns: {}, 
+    init() {
+        document.addEventListener('keydown', e => {
+            if (document.getElementById('view-player').classList.contains('hidden')) return;
+            const k = e.code;
+            if(k==='Space' || k==='KeyW') { e.preventDefault(); Player.togglePlay(); }
+            else if(k==='KeyA' || k==='ArrowLeft') Player.prevSub();
+            else if(k==='KeyD' || k==='ArrowRight') Player.nextSub();
+            else if(k==='KeyS' || k==='ArrowDown') { e.preventDefault(); Player.replaySub(); }
+            else if(k==='KeyF') App.toggleFocusMode();
+            else if(k==='Escape' && !document.getElementById('view-focus').classList.contains('hidden')) {
+                App.toggleFocusMode();
+            }
+        });
+        window.addEventListener("gamepadconnected", () => requestAnimationFrame(this.poll.bind(this)));
+    },
+    poll() {
+        const gp = navigator.getGamepads()[0];
+        if (gp) {
+            this.checkBtn(gp, 0, () => Player.togglePlay()); // A
+            this.checkBtn(gp, 3, () => App.toggleFocusMode()); // Y
+            
+            this.checkBtn(gp, 14, () => Player.prevSub());   // Left
+            this.checkBtn(gp, 15, () => Player.nextSub());   // Right
+            this.checkBtn(gp, 13, () => Player.replaySub()); // Down
+
+            const axisX = gp.axes[0];
+            const axisY = gp.axes[1];
+            
+            if (axisX < -0.5) this.triggerAxis('axLeft', () => Player.prevSub());
+            else if (axisX > 0.5) this.triggerAxis('axRight', () => Player.nextSub());
+            else { this.btns['axLeft'] = false; this.btns['axRight'] = false; }
+
+            if (axisY > 0.5) this.triggerAxis('axDown', () => Player.replaySub());
+            else this.btns['axDown'] = false;
+        }
+        requestAnimationFrame(this.poll.bind(this));
+    },
+    checkBtn(gp, idx, cb) {
+        if (gp.buttons[idx] && gp.buttons[idx].pressed) {
+            if (!this.btns[idx]) { this.btns[idx] = true; cb(); }
+        } else {
+            this.btns[idx] = false;
+        }
+    },
+    triggerAxis(key, cb) {
+        if (!this.btns[key]) { this.btns[key] = true; cb(); }
+    }
+};
+
+App.init();
+</script>
+</body>
+</html>
