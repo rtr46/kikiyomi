@@ -14,13 +14,19 @@
         "name": "kikiyomi",
         "short_name": "kikiyomi",
         "start_url": "./",
-        "display": "standalone",
+        "display": "fullscreen",
         "background_color": "#121212",
         "theme_color": "#121212",
         "icons": [{
-            "src": "icon.png",
+            "src": "regular-icon.png",
             "sizes": "512x512",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any"
+        },{
+            "src": "maskable-icon.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
         }]
     }'>
     <style>
@@ -865,3 +871,4 @@ App.init();
 </body>
 
 </html>
+
