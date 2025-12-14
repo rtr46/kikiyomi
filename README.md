@@ -1,4 +1,4 @@
-# kikiyomi
+# kikiyomi audio book player
 ![player_screenshot](https://github.com/user-attachments/assets/6cd3ef88-8f87-4b43-a946-38864b3d436f)
 
 **kikiyomi** is a simple, single-file audiobook player designed for japanese language learners. it runs entirely in your browser and works offline once loaded.
