@@ -10,25 +10,7 @@
 
     <!-- 2. pwa manifest (embedded) -->
     <!-- this tells the phone to use your icon and hide the browser bars -->
-    <link rel="manifest" href='data:application/manifest+json,{
-        "name": "kikiyomi",
-        "short_name": "kikiyomi",
-        "start_url": "./",
-        "display": "fullscreen",
-        "background_color": "#121212",
-        "theme_color": "#121212",
-        "icons": [{
-            "src": "regular-icon.png",
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "any"
-        },{
-            "src": "maskable-icon.png",
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "maskable"
-        }]
-    }'>
+    <link rel="manifest" href='data:application/manifest+json,{"name":"kikiyomi","short_name":"kikiyomi","start_url":"./","scope":"./","display":"fullscreen","background_color":"%23121212","theme_color":"%23121212","icons":[{"src":"regular-icon.png","sizes":"512x512","type":"image/png","purpose":"any"},{"src":"maskable-icon.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]}'>
     <style>
         :root { 
             --bg: #121212; --surface: #1e1e1e; --primary: #bb86fc; --text: #b0b0b0; --text-active: #ffffff; --sec: #03dac6; 
@@ -871,5 +853,6 @@ App.init();
 </body>
 
 </html>
+
 
 
