@@ -16,6 +16,17 @@
 2. drag and drop your `.m4b` or `.mp3` file (and optional `.srt` file) onto the drop zone.
 3. click "focus" to enter immersive mode.
 
+## controls
+
+| action | keyboard | gamepad |
+| :--- | :--- | :--- |
+| play / pause | space / w | button a |
+| replay line | s / down | d-pad down |
+| previous line | a / left | d-pad left |
+| next line | d / right | d-pad right |
+| toggle focus | f | button y |
+| exit focus | esc / hold click | - |
+
 ## license
 
 gpl-3.0
