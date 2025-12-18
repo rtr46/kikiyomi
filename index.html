@@ -16,10 +16,11 @@
             --font-ui: system-ui, -apple-system, sans-serif;
             --font-reader: system-ui, -apple-system, sans-serif;
             --font-size-base: 36px;
-            --active-weight: bold;
+            --active-weight: normal;
+            --active-scale: 1.05;
+            --focus-width: 90%;
         }
         * { box-sizing: border-box; }
-        
         body, button, header, .modal, .drop-zone, input[type=range] { 
             user-select: none; -webkit-user-select: none; 
         }
@@ -33,56 +34,80 @@
         .btn-primary { background: var(--primary); color: #000; font-weight: bold; border: none; }
         .icon-btn { background: transparent; border: none; color: #888; font-size: 1.3rem; cursor: pointer; padding: 5px; margin-left: 5px; }
         .icon-btn:hover { color: #fff; }
-        .del-btn { color: #555; font-size: 1.2rem; padding: 5px 10px; cursor: pointer; background: transparent; border:none; }
+        .del-btn { color: #555; font-size: 1.2rem; padding: 0 15px; cursor: pointer; background: transparent; border:none; height: 100%; display: flex; align-items: center; }
         .del-btn:hover { color: #ff5555; }
-
+    
         /* --- MODALS --- */
         .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index: 200; display:flex; justify-content:center; align-items:center; backdrop-filter: blur(2px); }
         .modal { background: var(--surface); padding: 25px; border-radius: 12px; width: 90%; max-width: 450px; border: 1px solid #333; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
         .setting-row { margin-bottom: 20px; display:flex; justify-content: space-between; align-items: center; }
-        .setting-row label { color: #e0e0e0; font-size: 0.9rem; }
+        .setting-row label { color: #e0e0e0; font-size: 0.9rem; flex: 1; }
+        .setting-input-group { flex: 1; display:flex; justify-content: flex-end; align-items: center; gap: 10px; }
         select, input[type=number] { padding: 8px; background: #121212; border: 1px solid #333; color: #fff; border-radius: 4px; }
         
         #loading-overlay { z-index: 300; flex-direction: column; }
         .spinner { width: 50px; height: 50px; border: 5px solid #333; border-top: 5px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
+    
         .key-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
         .key-table td { padding: 8px 0; border-bottom: 1px solid #333; }
         .key-table td:first-child { color: var(--primary); font-weight: bold; }
         .key-table td:last-child { text-align: right; color: #aaa; }
-
+    
         /* --- VIEW: LIBRARY --- */
         #view-library { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; max-width: 800px; margin: 0 auto; width: 100%; }
-        .drop-zone { width: 100%; height: 200px; border: 2px dashed #444; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #1a1a1a; margin-bottom: 30px; transition: border-color 0.2s; }
+        
+        .drop-zone { width: 100%; height: 100px; border: 2px dashed #333; border-radius: 12px; display: flex; flex-direction: row; gap: 15px; justify-content: center; align-items: center; background: #1a1a1a; margin-bottom: 20px; transition: border-color 0.2s; cursor: pointer; flex-shrink: 0; width: 100%; }
+        .drop-zone:hover { border-color: #666; background: #1f1f1f; }
         .drop-zone.dragover { border-color: var(--primary); background: #222; }
-        .resume-card { width: 100%; background: #252525; padding: 20px; border-radius: 12px; margin-bottom: 30px; border-left: 5px solid var(--sec); box-shadow: 0 4px 6px rgba(0,0,0,0.3); position: relative; }
-        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #333; cursor: pointer; width: 100%; transition: background 0.2s; }
-        .history-item:hover { background: #1f1f1f; }
-        .progress-bar-mini { height: 4px; background: #333; width: 100%; margin-top: 8px; border-radius: 2px; }
+        
+        #library-list { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+
+        .lib-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-radius: 8px; background: #252525; border: 1px solid #333; cursor: pointer; transition: transform 0.1s, background 0.2s; height: 80px; overflow: hidden; }
+        .lib-item:hover { background: #2a2a2a; }
+        .lib-item:active { transform: scale(0.99); }
+        
+        .lib-item.active-book { border: 2px solid var(--primary); background: #2d2036; }
+
+        .lib-cover { width: 60px; height: 60px; background: #111; border-radius: 4px; object-fit: cover; margin-right: 15px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #333; }
+        
+        .lib-info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+        .lib-title { font-weight: bold; font-size: 1rem; margin-bottom: 5px; color: #e0e0e0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .lib-meta { color:#888; font-size:0.75rem; display: flex; align-items: center; gap: 6px; }
+        
+        .progress-bar-mini { height: 4px; background: #111; width: 100%; margin-top: 8px; border-radius: 2px; }
         .progress-fill-mini { height: 100%; background: var(--sec); width: 0%; border-radius: 2px; }
+        
+        .badge { background: #111; color: #aaa; padding: 2px 5px; border-radius: 3px; font-size: 0.65rem; border: 1px solid #444; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge.cached { border-color: var(--sec); color: var(--sec); }
+        .badge.linked { border-color: #4a9eff; color: #4a9eff; }
+        .badge.playing { border-color: var(--primary); color: var(--primary); font-weight: bold; }
+
         .version-footer { margin-top: auto; padding-top: 20px; color: #444; font-size: 0.8rem; font-family: monospace; }
 
         /* --- VIEW: PLAYER --- */
         #view-player { flex: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; position: relative; }
         
-        header { height: 60px; padding: 0 20px; background: var(--surface); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #333; z-index: 50; flex-shrink: 0; }
+        header { height: 60px; padding: 0 20px; background: var(--surface); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #333; z-index: 50; flex-shrink: 0; position: relative; }
+        #player-title-container { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; pointer-events: none; }
+        #player-title { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 40%; font-size: 0.9rem; color:#888; pointer-events: auto; }
+        
         #controls { height: 140px; background: var(--surface); padding: 15px 20px; display: flex; flex-direction: column; justify-content: center; gap: 15px; border-top: 1px solid #333; z-index: 50; flex-shrink: 0; }
-
-        #player-content { flex: 1; display: flex; overflow: hidden; position: relative; z-index: 10; }
+    
+        #player-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; z-index: 10; }
         
         /* Subtitles List */
         #sub-list { flex: 1; overflow-y: auto; padding: 50vh 0; margin: 0; list-style: none; scroll-behavior: auto; background: #121212; position: relative; }
-        #sub-list li { padding: 15px 20px; color: #555; cursor: pointer; font-size: var(--font-size-base); font-family: var(--font-reader); line-height: 1.5; text-align: center; transition: color 0.1s, transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); max-width: 95%; margin: 0 auto; transform-origin: center center; user-select: text; -webkit-user-select: text; }
+        #sub-list li { padding: 15px 20px; color: #555; cursor: pointer; font-size: var(--font-size-base); font-family: var(--font-reader); line-height: 1.5; text-align: center; transition: color 0.1s, transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); max-width: 95%; margin: 0 auto; transform-origin: center center; user-select: text; -webkit-user-select: text; text-wrap: balance; }
         #sub-list li:hover { color: #888; }
-        #sub-list li.active { color: var(--text-active); font-weight: var(--active-weight); transform: scale(1.05); text-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        #sub-list li.active { color: var(--text-active); font-weight: var(--active-weight); transform: scale(var(--active-scale)); text-shadow: 0 0 20px rgba(0,0,0,0.5); }
         
         /* Empty State SRT Upload */
         .srt-empty-container { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; width: 100%; padding: 40px; box-sizing: border-box; }
         .srt-empty { width: 100%; height: 100%; max-width: 600px; max-height: 300px; border: 3px dashed #333; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #666; cursor: pointer; transition: all 0.2s; background: #151515; }
         .srt-empty:hover { border-color: var(--primary); color: #e0e0e0; background: #1a1a1a; transform: scale(1.01); }
         .srt-empty-icon { font-size: 3rem; margin-bottom: 15px; opacity: 0.5; }
-
+    
         /* Chapters Sidebar */
         #chapter-list { position: absolute; top: 60px; bottom: 140px; right: 0; width: 320px; background: #181818; border-left: 1px solid #333; overflow-y: auto; display: none; z-index: 60; box-shadow: -5px 0 15px rgba(0,0,0,0.5); }
         #chapter-list.open { display: block; }
@@ -92,7 +117,7 @@
         .chap-item.active-chap .chap-time { color: #222; }
         .chap-time { font-size: 0.75rem; color: #555; margin-right: 10px; font-family: monospace; min-width: 45px; text-align: right; }
         .chap-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
+    
         /* Custom Seek Bar */
         .timeline-container { display: flex; align-items: center; gap: 15px; color: #888; font-family: monospace; font-size: 0.9rem; }
         .seek-wrapper { flex: 1; position: relative; height: 16px; display: flex; align-items: center; }
@@ -100,50 +125,77 @@
         .seek-fill { position: absolute; left: 0; width: 0%; height: 4px; background: var(--primary); border-radius: 2px; z-index: 2; pointer-events: none; }
         #seek-markers { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; }
         .chap-marker { position: absolute; width: 2px; height: 6px; background: rgba(255,255,255,0.4); top: 5px; transform: translateX(-50%); }
-
+    
         input[type=range] { width: 100%; cursor: pointer; height: 16px; background: transparent; -webkit-appearance: none; position: relative; z-index: 4; margin: 0; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #fff; margin-top: -6px; box-shadow: 0 1px 3px rgba(0,0,0,0.5); }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: transparent; }
         input[type=range]::-moz-range-thumb { height: 16px; width: 16px; border-radius: 50%; background: #fff; border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.5); }
         input[type=range]::-moz-range-track { width: 100%; height: 4px; background: transparent; }
-
+    
         .buttons-row { display: flex; justify-content: center; gap: 25px; align-items: center; }
         .round-btn { width: 50px; height: 50px; border-radius: 50%; border: none; background: #2a2a2a; color: #ddd; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.1s; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .round-btn:active { transform: scale(0.95); background: #444; }
         .round-btn.main { width: 68px; height: 68px; background: #e0e0e0; color: #121212; font-size: 1.8rem; box-shadow: 0 4px 10px rgba(255,255,255,0.1); }
-
+    
         #view-focus { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px; text-align: center; }
-        #focus-text { font-family: var(--font-reader); font-size: clamp(2rem, 5vw, 4.5rem); font-weight: var(--active-weight); color: #e0e0e0; line-height: 1.4; max-width: 1200px; user-select: text; -webkit-user-select: text; }
+        #focus-text { 
+            font-family: var(--font-reader); 
+            font-size: calc(var(--font-size-base) * 1.5); 
+            font-weight: var(--active-weight); 
+            color: #e0e0e0; 
+            line-height: 1.4; 
+            max-width: var(--focus-width); 
+            width: 100%;
+            user-select: text; -webkit-user-select: text; 
+            text-wrap: balance; 
+        }
         #focus-hint { position: absolute; bottom: 20px; color: #333; font-size: 0.8rem; font-family: sans-serif; opacity: 0; transition: opacity 0.5s; user-select: none; }
         #view-focus:hover #focus-hint { opacity: 1; }
-
+    
         @media (max-width: 600px) {
             #chapter-list { width: 85%; }
-            #sub-list li.active { transform: scale(1.05); }
+            #sub-list li.active { transform: scale(var(--active-scale)); }
         }
     </style>
-</head>
-<body>
-
+    </head>
+    <body>
+    
     <input type="file" id="srt-upload" hidden accept=".srt">
-
+    
     <div id="loading-overlay" class="modal-overlay hidden">
         <div class="spinner"></div>
         <div style="color:white; font-weight:bold; letter-spacing:1px;">Processing...</div>
     </div>
 
+    <!-- FILE REQUEST MODAL -->
+    <div id="modal-file-req" class="modal-overlay hidden">
+        <div class="modal">
+            <h2 style="margin-top:0; color: var(--primary);">Load File</h2>
+            <div style="color:#ccc; margin-bottom: 20px; line-height:1.5;">
+                This book is not cached. Please select the following file:
+                <div style="background:#111; padding:10px; border-radius:6px; margin-top:10px; font-family:monospace; color:#fff;" id="req-filename">...</div>
+            </div>
+            <div style="text-align: right;">
+                <button class="btn" onclick="document.getElementById('modal-file-req').classList.add('hidden')">Cancel</button>
+                <button class="btn btn-primary" onclick="App.triggerFileSelect()">Select File</button>
+            </div>
+        </div>
+    </div>
+    
     <!-- SETTINGS -->
     <div id="modal-settings" class="modal-overlay hidden" onclick="if(event.target===this) App.toggleModal('modal-settings')">
         <div class="modal">
             <h2 style="margin-top:0; color: var(--primary);">Settings</h2>
             <div class="setting-row"><label>Font Family</label><select id="opt-font" onchange="App.applySettings()"><option value="system-ui, -apple-system, sans-serif">System Sans</option><option value="'Times New Roman', serif">Serif</option><option value="'Hiragino Mincho ProN', 'Yu Mincho', serif">Yu Mincho (JP)</option><option value="'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif">Yu Gothic (JP)</option><option value="'Meiryo', sans-serif">Meiryo (JP)</option><option value="'MS Gothic', monospace">MS Gothic (JP)</option></select></div>
-            <div class="setting-row"><label>Font Size (px)</label><div style="flex:1; margin-left:15px; display:flex; align-items:center; gap:10px;"><input type="number" id="opt-size" min="12" max="80" value="36" onchange="App.applySettings()" style="width:70px"></div></div>
-            <div class="setting-row"><label>Bold Active Line</label><input type="checkbox" id="opt-bold" checked onchange="App.applySettings()" style="width:20px; height:20px; accent-color: var(--primary);"></div>
+            <div class="setting-row"><label>Font Size (px)</label><div class="setting-input-group"><input type="number" id="opt-size" min="12" max="80" value="36" onchange="App.applySettings()" style="width:70px"></div></div>
+            <div class="setting-row"><label>Focus Max Width (%)</label><div class="setting-input-group"><input type="number" id="opt-focus-width" min="50" max="100" value="90" onchange="App.applySettings()" style="width:70px"></div></div>
+            <div class="setting-row"><label>Active Line Scale</label><div class="setting-input-group"><input type="number" id="opt-active-scale" min="1.0" max="2.0" step="0.05" value="1.05" onchange="App.applySettings()" style="width:70px"></div></div>
+            <div class="setting-row"><label>Bold Active Line</label><input type="checkbox" id="opt-bold" onchange="App.applySettings()" style="width:20px; height:20px; accent-color: var(--primary);"></div>
             <div class="setting-row"><label>Fill Silence (Gaps)</label><input type="checkbox" id="opt-fill" checked onchange="App.applySettings()" style="width:20px; height:20px; accent-color: var(--primary);"></div>
             <div style="text-align: right; margin-top:20px;"><button class="btn btn-primary" onclick="App.toggleModal('modal-settings')">Done</button></div>
         </div>
     </div>
-
+    
     <!-- HELP -->
     <div id="modal-help" class="modal-overlay hidden" onclick="if(event.target===this) App.toggleModal('modal-help')">
         <div class="modal">
@@ -159,47 +211,46 @@
             <div style="text-align: right; margin-top:20px;"><button class="btn btn-primary" onclick="App.toggleModal('modal-help')">Close</button></div>
         </div>
     </div>
-
+    
     <!-- LIBRARY -->
     <div id="view-library">
-        <h1 style="color: var(--primary); letter-spacing: 2px; font-weight: normal;">kikiyomi</h1>
-        <div id="resume-section" class="resume-card hidden">
-            <button class="del-btn" style="position:absolute; top:5px; right:5px;" onclick="App.deleteActive(event)" title="Clear Active">×</button>
-            <h3 style="margin-top:0; color:#aaa; font-size:0.7rem; letter-spacing:1px; text-transform:uppercase;">Continue Listening</h3>
-            <div id="resume-title" style="font-size: 1.4rem; font-weight: bold; margin-bottom: 10px; color:white;">...</div>
-            <div style="display:flex; gap:10px; align-items: center;"><div class="progress-bar-mini" style="margin:0; flex:1;"><div id="resume-bar" class="progress-fill-mini"></div></div><span id="resume-pct" style="font-size:0.8rem; color:#aaa;">0%</span></div>
-            <button class="btn btn-primary" style="margin-top: 15px; width:100%" onclick="App.resumeActive()">Resume</button>
-        </div>
+        <h1 style="color: var(--primary); letter-spacing: 2px; font-weight: normal; margin-bottom: 20px;">kikiyomi</h1>
+        
         <div id="drop-zone" class="drop-zone">
-            <div style="font-size: 3rem; margin-bottom: 10px; opacity: 0.7;">🎧</div>
-            <div style="color: #e0e0e0; font-weight: bold; font-size: 1.1rem;">Open/Drop Audio File</div>
-            <div style="color: #666; font-size: 0.8rem; margin-top:5px;">.m4b, .mp3 + .srt (optional)</div>
-            <input type="file" id="file-input" hidden multiple accept=".mp3,.m4b,.aac,.srt,.json">
+            <div style="font-size: 2rem; opacity: 0.7;">🎧</div>
+            <div style="display:flex; flex-direction:column; align-items: flex-start;">
+                <div style="color: #e0e0e0; font-weight: bold; font-size: 1rem;">Open Audio File</div>
+                <div style="color: #666; font-size: 0.8rem;">.m4b, .mp3 + .srt</div>
+            </div>
+            <input type="file" id="file-input" hidden multiple accept=".mp3,.m4b,.aac,.srt,.json,.m4a">
         </div>
-        <h3 style="align-self: flex-start; margin-bottom: 10px; color: #555; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">History</h3>
-        <div id="history-list" style="width:100%"></div>
-        <div class="version-footer">v0.0.2</div>
-    </div>
 
+        <h3 style="align-self: flex-start; margin-bottom: 10px; color: #555; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Library</h3>
+        <div id="library-list"></div>
+        <div class="version-footer">v0.0.3</div>
+    </div>
+    
     <!-- PLAYER -->
     <div id="view-player" class="hidden">
         <header>
-            <button class="btn" onclick="App.showLibrary()">← Home</button>
-            <div id="player-title" style="font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 30%; font-size: 0.9rem; color:#888;">...</div>
-            <div style="display:flex; align-items: center;">
+            <button class="btn" onclick="App.showLibrary()" style="z-index: 2;">← Home</button>
+            <div id="player-title-container">
+                <div id="player-title">...</div>
+            </div>
+            <div style="display:flex; align-items: center; z-index: 2;">
                 <button class="btn" onclick="App.toggleChapters()" style="margin-right:5px">Chapters</button>
                 <button class="btn" onclick="App.toggleFocusMode()" style="margin-right:5px">Focus</button>
                 <button class="icon-btn" onclick="App.toggleModal('modal-settings')" title="Settings">⚙</button>
                 <button class="icon-btn" onclick="App.toggleModal('modal-help')" title="Controls">?</button>
             </div>
         </header>
-
+    
         <div id="player-content">
             <ul id="sub-list"></ul>
         </div>
         
         <div id="chapter-list"></div>
-
+    
         <div id="controls">
             <div class="timeline-container">
                 <span id="t-curr">00:00</span>
@@ -219,755 +270,823 @@
             </div>
         </div>
     </div>
-
+    
     <!-- FOCUS -->
     <div id="view-focus" class="hidden">
         <div id="focus-text">...</div>
         <div id="focus-hint">Tap Center: Play • Tap Sides: Seek • Hold/Esc: Exit</div>
     </div>
-
+    
     <audio id="audio-el" hidden></audio>
+    <script>
+    // --- UTILS ---
+    const Utils = {
+        async read(file, start, len) {
+            if (start >= file.size) throw new Error("OOB");
+            const chunk = file.slice(start, start + len);
+            return new DataView(await chunk.arrayBuffer());
+        },
+        readStr(view, offset, len) {
+            return new TextDecoder().decode(new Uint8Array(view.buffer, offset, len));
+        },
+        fmtTime(s) {
+            if (isNaN(s)) return "00:00";
+            const h = Math.floor(s / 3600);
+            const m = Math.floor((s % 3600) / 60);
+            const sec = Math.floor(s % 60);
+            if (h > 0) return `${h}:${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
+            return `${m}:${sec.toString().padStart(2,'0')}`;
+        }
+    };
 
-<script>
-// --- M4B PARSER ---
-const M4BParser = {
-    async parse(file) {
-        console.log("Parsing chapters for:", file.name);
-        const fileSize = file.size;
-        const read = async (start, len) => {
-            const b = file.slice(start, start + len);
-            const buf = await b.arrayBuffer();
-            return new DataView(buf);
-        };
-        const readStr = (view, offset, len) => new TextDecoder().decode(new Uint8Array(view.buffer, offset, len));
-        
-        const findAtom = async (start, end, target, deep = false) => {
+    // --- PARSERS ---
+    const M4BParser = {
+        async parse(file) {
+            const context = { file: file, meta: { cover: null, tags: {}, chapters: [] } };
+            try {
+                const moov = await this.findAtom(context, 0, file.size, 'moov');
+                if (!moov) return context.meta;
+
+                // Chapters & Meta
+                const udta = await this.findAtom(context, moov.contentStart, moov.end, 'udta');
+                if (udta) {
+                    const chpl = await this.findAtom(context, udta.contentStart, udta.end, 'chpl');
+                    if (chpl) await this.parseChpl(context, chpl);
+                    
+                    const metaAtom = await this.findAtom(context, udta.contentStart, udta.end, 'meta');
+                    if (metaAtom) {
+                        const ilst = await this.findAtom(context, metaAtom.contentStart + 4, metaAtom.end, 'ilst');
+                        if (ilst) await this.parseIlst(context, ilst);
+                    }
+                }
+                
+                // Text Tracks
+                await this.parseTracks(context, moov);
+            } catch (e) { console.warn("M4B Parse Error", e); }
+            return context.meta;
+        },
+        async findAtom(ctx, start, end, targetName) {
             let cur = start;
             while (cur < end) {
-                if (cur + 8 > fileSize) break;
-                const h = await read(cur, 8);
-                let sz = h.getUint32(0);
-                const typ = readStr(h, 4, 4);
-                let hSz = 8;
-                let actSz = sz;
-                if (sz === 1) { const h2 = await read(cur+8, 8); actSz = Number(h2.getBigUint64(0)); hSz = 16; }
-                if (sz === 0) actSz = end - cur;
-                if (typ === target) return { start: cur + hSz, end: cur + actSz, size: actSz - hSz };
-                if (deep && ['moov','udta','trak','mdia','minf','stbl'].includes(typ)) {
-                    const found = await findAtom(cur + hSz, cur + actSz, target, true);
-                    if (found) return found;
-                }
-                cur += actSz;
+                if (cur + 8 > ctx.file.size) break;
+                const h = await Utils.read(ctx.file, cur, 8);
+                let size = h.getUint32(0);
+                const type = Utils.readStr(h, 4, 4);
+                let headerSize = 8;
+                let actualSize = size;
+                if (size === 1) {
+                    const h2 = await Utils.read(ctx.file, cur + 8, 8);
+                    actualSize = Number(h2.getBigUint64(0)); headerSize = 16;
+                } else if (size === 0) actualSize = end - cur;
+                if (type === targetName) return { start: cur, contentStart: cur + headerSize, end: cur + actualSize, size: actualSize };
+                cur += actualSize;
             }
             return null;
-        };
-        
-        const findAllAtoms = async (start, end, target) => {
-            const found = [];
-            let cur = start;
-            while (cur < end) {
-                if (cur + 8 > fileSize) break;
-                const h = await read(cur, 8);
-                let sz = h.getUint32(0);
-                const typ = readStr(h, 4, 4);
-                let hSz = 8;
-                let actSz = sz;
-                if (sz === 1) { const h2 = await read(cur+8, 8); actSz = Number(h2.getBigUint64(0)); hSz = 16; }
-                if (sz === 0) actSz = end - cur;
-                if (typ === target) found.push({ start: cur + hSz, end: cur + actSz, size: actSz - hSz });
-                cur += actSz;
+        },
+        async parseChpl(ctx, atom) {
+            const view = await Utils.read(ctx.file, atom.contentStart, atom.size - 8);
+            const count = view.getUint32(4);
+            let ptr = 8; const dec = new TextDecoder('utf-8');
+            for(let i=0; i<count; i++) {
+                if (ptr >= view.byteLength) break;
+                const startTs = Number(view.getBigUint64(ptr)) / 10000000; ptr += 8;
+                const len = view.getUint8(ptr); ptr++;
+                let title = dec.decode(new Uint8Array(view.buffer, ptr, len)); ptr += len;
+                ctx.meta.chapters.push({ start: startTs, title });
             }
-            return found;
-        };
-
-        const moov = await findAtom(0, fileSize, 'moov');
-        if (!moov) return [];
-
-        const udta = await findAtom(moov.start, moov.end, 'udta');
-        if (udta) {
-            const chpl = await findAtom(udta.start, udta.end, 'chpl');
-            if (chpl) {
-                const data = await read(chpl.start, chpl.size);
-                let ptr = 5; 
-                const count = data.getUint32(ptr); ptr += 4;
-                const chaps = [];
-                const dec = new TextDecoder('utf-8');
-                for (let i=0; i<count; i++) {
-                    if (ptr >= chpl.size) break;
-                    const ts = Number(data.getBigUint64(ptr)) / 10000000; ptr += 8;
-                    const len = data.getUint8(ptr); ptr++;
-                    let title = dec.decode(new Uint8Array(data.buffer, ptr, len)); ptr += len;
-                    chaps.push({ start: ts, title });
-                }
-                return chaps;
-            }
-        }
-
-        const traks = await findAllAtoms(moov.start, moov.end, 'trak');
-        for (const trak of traks) {
-            const mdia = await findAtom(trak.start, trak.end, 'mdia');
-            if (!mdia) continue;
-            const hdlr = await findAtom(mdia.start, mdia.end, 'hdlr');
-            if (!hdlr) continue;
-            const hdlrData = await read(hdlr.start, hdlr.size);
-            const subType = readStr(hdlrData, 8, 4);
-            
-            if (subType === 'text' || subType === 'sbtl') {
-                const mdhd = await findAtom(mdia.start, mdia.end, 'mdhd');
-                const mdhdD = await read(mdhd.start, mdhd.size);
-                const ver = mdhdD.getUint8(0);
-                let timeScale = mdhdD.getUint32(ver === 1 ? 20 : 12);
-                if (timeScale === 0) timeScale = 44100;
-
-                const minf = await findAtom(mdia.start, mdia.end, 'minf');
-                const stbl = await findAtom(minf.start, minf.end, 'stbl');
-                const stts = await findAtom(stbl.start, stbl.end, 'stts');
-                const stsc = await findAtom(stbl.start, stbl.end, 'stsc');
-                const stsz = await findAtom(stbl.start, stbl.end, 'stsz');
-                const stco = await findAtom(stbl.start, stbl.end, 'stco');
-                const co64 = await findAtom(stbl.start, stbl.end, 'co64');
-
-                if (!stts || !stsc || !stsz || (!stco && !co64)) continue;
-
-                const sttsD = await read(stts.start, stts.size);
-                const sttsCnt = sttsD.getUint32(4);
-                let durPtr = 8;
-                const durations = [];
-                for(let i=0; i<sttsCnt; i++) {
-                    const c = sttsD.getUint32(durPtr);
-                    const d = sttsD.getUint32(durPtr+4);
-                    durPtr += 8;
-                    for(let j=0; j<c; j++) durations.push(d);
-                }
-
-                const stszD = await read(stsz.start, stsz.size);
-                const uSz = stszD.getUint32(4);
-                const count = stszD.getUint32(8);
-                const sizes = [];
-                if (uSz !== 0) { for(let i=0; i<count; i++) sizes.push(uSz); }
-                else {
-                    let szPtr = 12;
-                    for(let i=0; i<count; i++) { sizes.push(stszD.getUint32(szPtr)); szPtr += 4; }
-                }
-
-                const chunks = [];
-                if (stco) {
-                    const d = await read(stco.start, stco.size);
-                    const cnt = d.getUint32(4);
-                    let p = 8;
-                    for(let i=0; i<cnt; i++) { chunks.push(d.getUint32(p)); p+=4; }
-                } else {
-                    const d = await read(co64.start, co64.size);
-                    const cnt = d.getUint32(4);
-                    let p = 8;
-                    for(let i=0; i<cnt; i++) { chunks.push(Number(d.getBigUint64(p))); p+=8; }
-                }
-
-                const stscD = await read(stsc.start, stsc.size);
-                const stscCnt = stscD.getUint32(4);
-                const stscE = [];
-                let scPtr = 8;
-                for(let i=0; i<stscCnt; i++) {
-                    stscE.push({ first: stscD.getUint32(scPtr), count: stscD.getUint32(scPtr+4) });
-                    scPtr += 12;
-                }
-
-                const chaps = [];
-                let currTime = 0;
-                let sIdx = 0, cIdx = 0, stscIdx = 0;
-                const dec = new TextDecoder('utf-8');
-
-                while (sIdx < count) {
-                    const currChunkId = cIdx + 1;
-                    if (stscIdx < stscE.length - 1 && currChunkId >= stscE[stscIdx+1].first) stscIdx++;
-                    const sInChunk = stscE[stscIdx].count;
-                    let currOff = chunks[cIdx];
-
-                    for (let i=0; i<sInChunk; i++) {
-                        if (sIdx >= count) break;
-                        const sz = sizes[sIdx];
-                        const dur = durations[sIdx];
-                        if (sz > 2) {
-                            const txtView = await read(currOff, sz);
-                            let title = "";
-                            const txtLen = txtView.getUint16(0);
-                            if (txtLen === sz - 2) title = dec.decode(new Uint8Array(txtView.buffer, 2, txtLen));
-                            else title = dec.decode(new Uint8Array(txtView.buffer, 0, sz));
-                            title = title.replace(/[\x00-\x1F]/g, '').replace(/\s*encd.*$/i, '').trim();
-                            chaps.push({ start: currTime / timeScale, title });
+        },
+        async parseIlst(ctx, atom) {
+            let cur = atom.contentStart;
+            while (cur < atom.end) {
+                if (cur + 8 > ctx.file.size) break;
+                const h = await Utils.read(ctx.file, cur, 8);
+                const size = h.getUint32(0);
+                const type = Utils.readStr(h, 4, 4);
+                if (size === 0) break;
+                if (type === 'covr') {
+                    const dataAtom = await this.findAtom(ctx, cur + 8, cur + size, 'data');
+                    if (dataAtom) {
+                        const head = await Utils.read(ctx.file, dataAtom.start, 16);
+                        const flag = head.getUint32(8);
+                        let mime = (flag === 14) ? 'image/png' : 'image/jpeg';
+                        const imgStart = dataAtom.start + 16;
+                        const imgSize = dataAtom.size - 16;
+                        ctx.meta.cover = { blob: ctx.file.slice(imgStart, imgStart + imgSize), mime };
+                    }
+                } else if (['©nam','©ART','©alb'].includes(type)) {
+                    const dataAtom = await this.findAtom(ctx, cur + 8, cur + size, 'data');
+                    if (dataAtom) {
+                        const txtLen = dataAtom.size - 16;
+                        if (txtLen > 0) {
+                            const txtView = await Utils.read(ctx.file, dataAtom.contentStart + 8, txtLen);
+                            const val = Utils.readStr(txtView, 0, txtLen);
+                            const map = {'©nam':'Title'};
+                            if (map[type]) ctx.meta.tags[map[type]] = val;
                         }
-                        currTime += dur;
-                        currOff += sz;
-                        sIdx++;
                     }
-                    cIdx++;
                 }
-                return chaps;
+                cur += size;
+            }
+        },
+        async parseTracks(ctx, moovAtom) {
+            let cur = moovAtom.contentStart;
+            while (cur < moovAtom.end) {
+                const h = await Utils.read(ctx.file, cur, 8);
+                const size = h.getUint32(0);
+                const type = Utils.readStr(h, 4, 4);
+                if (size === 0) break;
+                if (type === 'trak') await this.inspectTrak(ctx, { start: cur, contentStart: cur + 8, end: cur + size });
+                cur += size;
+            }
+        },
+        async inspectTrak(ctx, trak) {
+            const mdia = await this.findAtom(ctx, trak.contentStart, trak.end, 'mdia'); if (!mdia) return;
+            const hdlr = await this.findAtom(ctx, mdia.contentStart, mdia.end, 'hdlr'); if (!hdlr) return;
+            const hdlrView = await Utils.read(ctx.file, hdlr.contentStart, hdlr.size - 8);
+            const subType = Utils.readStr(hdlrView, 8, 4);
+            if (subType === 'text' || subType === 'sbtl') await this.parseTextTrack(ctx, mdia);
+        },
+        async parseTextTrack(ctx, mdia) {
+            const minf = await this.findAtom(ctx, mdia.contentStart, mdia.end, 'minf'); if (!minf) return;
+            const stbl = await this.findAtom(ctx, minf.contentStart, minf.end, 'stbl'); if (!stbl) return;
+            const stts = await this.findAtom(ctx, stbl.contentStart, stbl.end, 'stts');
+            const stsz = await this.findAtom(ctx, stbl.contentStart, stbl.end, 'stsz');
+            const stsc = await this.findAtom(ctx, stbl.contentStart, stbl.end, 'stsc');
+            const co = await this.findAtom(ctx, stbl.contentStart, stbl.end, 'stco') || await this.findAtom(ctx, stbl.contentStart, stbl.end, 'co64');
+            if (!stts || !stsz || !stsc || !co) return;
+
+            const mdhd = await this.findAtom(ctx, mdia.contentStart, mdia.end, 'mdhd');
+            const mdhdView = await Utils.read(ctx.file, mdhd.contentStart, 24);
+            const ver = mdhdView.getUint8(0);
+            const timescale = mdhdView.getUint32(ver === 1 ? 20 : 12);
+
+            const sttsView = await Utils.read(ctx.file, stts.contentStart, stts.size-8);
+            const sttsCount = sttsView.getUint32(4);
+            let durations = [], ptr = 8;
+            for(let i=0; i<sttsCount; i++) {
+                const c = sttsView.getUint32(ptr), d = sttsView.getUint32(ptr+4); ptr+=8;
+                for(let j=0; j<c; j++) durations.push(d);
+            }
+
+            const stszView = await Utils.read(ctx.file, stsz.contentStart, stsz.size-8);
+            const uSz = stszView.getUint32(4), sCnt = stszView.getUint32(8);
+            let sizes = [];
+            if (uSz !== 0) { for(let i=0; i<sCnt; i++) sizes.push(uSz); }
+            else { ptr = 12; for(let i=0; i<sCnt; i++) { sizes.push(stszView.getUint32(ptr)); ptr+=4; } }
+
+            let chunks = [];
+            const coView = await Utils.read(ctx.file, co.contentStart, co.size-8);
+            const coCnt = coView.getUint32(4); ptr = 8;
+            const coType = Utils.readStr({buffer:(await Utils.read(ctx.file, co.start+4, 4)).buffer},0,4);
+            for(let i=0; i<coCnt; i++) { 
+                if(coType==='stco') { chunks.push(coView.getUint32(ptr)); ptr+=4; }
+                else { chunks.push(Number(coView.getBigUint64(ptr))); ptr+=8; }
+            }
+
+            const stscView = await Utils.read(ctx.file, stsc.contentStart, stsc.size-8);
+            const stscCnt = stscView.getUint32(4);
+            let stscE = []; ptr=8;
+            for(let i=0; i<stscCnt; i++) { stscE.push({f:stscView.getUint32(ptr), c:stscView.getUint32(ptr+4)}); ptr+=12; }
+
+            let currTime=0, sIdx=0, stscIdx=0; const dec = new TextDecoder('utf-8');
+            for(let cIdx=0; cIdx<chunks.length; cIdx++) {
+                if(stscIdx<stscE.length-1 && (cIdx+1)>=stscE[stscIdx+1].f) stscIdx++;
+                const nSamp = stscE[stscIdx].c;
+                let offset = chunks[cIdx];
+                for(let i=0; i<nSamp; i++) {
+                    if(sIdx>=sCnt) break;
+                    const sz=sizes[sIdx], dur=durations[sIdx];
+                    if(sz>2) {
+                        const txtView = await Utils.read(ctx.file, offset, sz);
+                        const txtLen = txtView.getUint16(0);
+                        let title = (txtLen===sz-2) ? dec.decode(new Uint8Array(txtView.buffer, 2, txtLen)) : dec.decode(new Uint8Array(txtView.buffer, 0, sz));
+                        title = title.replace(/[\x00-\x1F]/g,'').replace(/\s*encd.*$/i,'').trim();
+                        ctx.meta.chapters.push({start: currTime/timescale, title});
+                    }
+                    currTime+=dur; offset+=sz; sIdx++;
+                }
             }
         }
-        return [];
-    }
-};
+    };
 
-// --- DB & APP ---
-const DB = {
-    db: null,
-    async init() {
-        return new Promise((resolve, reject) => {
-            const req = indexedDB.open('KikiYomiDB', 1);
-            req.onupgradeneeded = (e) => {
-                const db = e.target.result;
-                if (!db.objectStoreNames.contains('metadata')) db.createObjectStore('metadata', { keyPath: 'id' });
-                if (!db.objectStoreNames.contains('media')) db.createObjectStore('media', { keyPath: 'key' });
-            };
-            req.onsuccess = (e) => { this.db = e.target.result; resolve(); };
-            req.onerror = (e) => reject(e);
-        });
-    },
-    async saveMetadata(book) {
-        const tx = this.db.transaction('metadata', 'readwrite');
-        tx.objectStore('metadata').put(book);
-        return new Promise(r => tx.oncomplete = r);
-    },
-    async deleteMetadata(id) {
-        const tx = this.db.transaction('metadata', 'readwrite');
-        tx.objectStore('metadata').delete(id);
-        return new Promise(r => tx.oncomplete = r);
-    },
-    async getAllMetadata() {
-        return new Promise(r => {
-            const req = this.db.transaction('metadata').objectStore('metadata').getAll();
-            req.onsuccess = () => r(req.result);
-        });
-    },
-    async setActiveAudio(blob) {
-        const tx = this.db.transaction('media', 'readwrite');
-        tx.objectStore('media').put({ key: 'active', blob: blob });
-        return new Promise(r => tx.oncomplete = r);
-    },
-    async getActiveAudio() {
-        return new Promise(r => {
-            const req = this.db.transaction('media').objectStore('media').get('active');
-            req.onsuccess = () => r(req.result ? req.result.blob : null);
-        });
-    },
-    async clearActive() {
-        const tx = this.db.transaction('media', 'readwrite');
-        tx.objectStore('media').delete('active');
-        return new Promise(r => tx.oncomplete = r);
-    }
-};
-
-const App = {
-    currentBook: null, activeAudioBlob: null,
-    settings: { font: '', size: 36, fillGap: true, bold: true },
-    async init() {
-        await DB.init();
-        this.loadSettings();
-        this.renderLibrary();
-        const dz = document.getElementById('drop-zone');
-        dz.onclick = () => document.getElementById('file-input').click();
-        document.getElementById('file-input').onchange = (e) => this.handleFiles(e.target.files);
-        document.getElementById('srt-upload').onchange = (e) => this.handleSrtUpload(e.target.files[0]);
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(n => {
-            document.body.addEventListener(n, e => { e.preventDefault(); e.stopPropagation(); }, false);
-        });
-        document.body.addEventListener('dragover', () => dz.classList.add('dragover'));
-        document.body.addEventListener('dragleave', () => dz.classList.remove('dragover'));
-        document.body.addEventListener('drop', (e) => {
-            dz.classList.remove('dragover');
-            this.handleFiles(e.dataTransfer.files);
-        });
-        Input.init();
-    },
-    loadSettings() {
-        this.settings.font = localStorage.getItem('ky_font') || "system-ui, -apple-system, sans-serif";
-        this.settings.size = parseInt(localStorage.getItem('ky_size') || "36");
-        this.settings.fillGap = localStorage.getItem('ky_fill') !== "false"; 
-        this.settings.bold = localStorage.getItem('ky_bold') !== "false";
-        document.getElementById('opt-font').value = this.settings.font;
-        document.getElementById('opt-size').value = this.settings.size;
-        document.getElementById('opt-fill').checked = this.settings.fillGap;
-        document.getElementById('opt-bold').checked = this.settings.bold;
-        this.applySettings();
-    },
-    applySettings() {
-        this.settings.font = document.getElementById('opt-font').value;
-        this.settings.size = parseInt(document.getElementById('opt-size').value);
-        this.settings.fillGap = document.getElementById('opt-fill').checked;
-        this.settings.bold = document.getElementById('opt-bold').checked;
-        document.documentElement.style.setProperty('--font-reader', this.settings.font);
-        document.documentElement.style.setProperty('--font-size-base', this.settings.size + 'px');
-        document.documentElement.style.setProperty('--active-weight', this.settings.bold ? 'bold' : 'normal');
-        localStorage.setItem('ky_font', this.settings.font);
-        localStorage.setItem('ky_size', this.settings.size);
-        localStorage.setItem('ky_fill', this.settings.fillGap);
-        localStorage.setItem('ky_bold', this.settings.bold);
-        if (Player.meta) Player.syncSub(); 
-    },
-    toggleModal(id) { document.getElementById(id).classList.toggle('hidden'); },
-    async renderLibrary() {
-        document.getElementById('view-library').classList.remove('hidden');
-        document.getElementById('view-player').classList.add('hidden');
-        document.getElementById('view-focus').classList.add('hidden');
-        const allBooks = await DB.getAllMetadata();
-        allBooks.sort((a, b) => b.lastPlayed - a.lastPlayed);
-        const cachedAudio = await DB.getActiveAudio();
-        const activeId = localStorage.getItem('activeBookId');
-        const activeMeta = allBooks.find(b => b.id === activeId);
-        const resumeSection = document.getElementById('resume-section');
-        const historyList = document.getElementById('history-list');
-        historyList.innerHTML = '';
-        if (cachedAudio && activeMeta) {
-            resumeSection.classList.remove('hidden');
-            document.getElementById('resume-title').textContent = activeMeta.title;
-            const pct = activeMeta.duration > 0 ? (activeMeta.progress / activeMeta.duration * 100).toFixed(1) : 0;
-            document.getElementById('resume-bar').style.width = pct + '%';
-            document.getElementById('resume-pct').textContent = pct + '%';
-        } else { resumeSection.classList.add('hidden'); }
-        allBooks.forEach(book => {
-            const div = document.createElement('div');
-            div.className = 'history-item';
-            const pct = book.duration > 0 ? (book.progress / book.duration * 100).toFixed(1) : 0;
-            div.innerHTML = `<div style="flex:1" onclick="App.loadBookFromHistory('${book.id}')"><div style="font-weight:bold; font-size:1.1rem; margin-bottom:5px; color:#e0e0e0;">${book.title}</div><div style="color:#666; font-size:0.8rem;">${this.fmtTime(book.progress)} / ${this.fmtTime(book.duration)}</div><div class="progress-bar-mini"><div class="progress-fill-mini" style="width:${pct}%"></div></div></div><button class="del-btn" onclick="App.deleteBook('${book.id}', event)">×</button>`;
-            historyList.appendChild(div);
-        });
-    },
-    async handleFiles(files) {
-        document.getElementById('loading-overlay').classList.remove('hidden');
-        setTimeout(async () => {
-            try {
-                let audioFile = null, srtFile = null, jsonFile = null;
-                const getExt = (name) => name.split('.').pop().toLowerCase();
-                for (let f of files) {
-                    const ext = getExt(f.name);
-                    if (['mp3','m4b','aac','mp4','m4a'].includes(ext)) audioFile = f;
-                    if (ext === 'srt') srtFile = f;
-                    if (ext === 'json') jsonFile = f;
+    const ID3Parser = {
+        async parse(file) {
+            const meta = { cover: null, tags: {}, chapters: [] };
+            const h = await Utils.read(file, 0, 10);
+            if (Utils.readStr(h, 0, 3) !== 'ID3') return meta;
+            const fnSize = (h.getUint8(6)<<21)|(h.getUint8(7)<<14)|(h.getUint8(8)<<7)|h.getUint8(9);
+            let pos = 10; const limit = 10 + fnSize;
+            while (pos < limit) {
+                const fh = await Utils.read(file, pos, 10);
+                const id = Utils.readStr(fh, 0, 4);
+                const size = fh.getUint32(4);
+                if (id.charCodeAt(0) === 0) break;
+                if (id === 'APIC') {
+                    const fBuf = await Utils.read(file, pos+10, size);
+                    const view = new DataView(fBuf.buffer);
+                    let ptr = 0, mime = "";
+                    ptr++; 
+                    while(ptr<size && view.getUint8(ptr)!==0) { mime += String.fromCharCode(view.getUint8(ptr)); ptr++; }
+                    ptr++; ptr++; 
+                    while(ptr<size && view.getUint8(ptr)!==0) ptr++; 
+                    ptr++;
+                    while(ptr<size && view.getUint8(ptr)===0) ptr++; 
+                    meta.cover = { blob: file.slice(pos+10+ptr, pos+10+size), mime: mime || 'image/jpeg' };
+                } else if (id === 'TIT2') {
+                    // Simple text tag read (assuming ISO or UTF-8 simple for PoC)
+                    const fBuf = await Utils.read(file, pos+10, size);
+                    const dec = new TextDecoder('utf-8');
+                    meta.tags.Title = dec.decode(new Uint8Array(fBuf.buffer).slice(1)).replace(/\0/g,'');
                 }
-                if (audioFile) {
-                    const id = "b_" + Math.abs(this.hashCode(audioFile.name));
-                    let meta = (await DB.getAllMetadata()).find(b => b.id === id);
-                    if (!meta) {
-                        meta = {
-                            id: id, title: audioFile.name.replace(/\.(mp3|m4b|aac|mp4)$/i, ''),
-                            duration: 0, progress: 0, lastPlayed: Date.now(), subs: [], chapters: []
-                        };
-                    }
-                    if (srtFile) meta.subs = await this.parseSrt(srtFile);
-                    if (jsonFile) meta.chapters = await this.parseJsonChapters(jsonFile);
-                    if (!meta.chapters || meta.chapters.length === 0) {
-                        try {
-                            const caps = await M4BParser.parse(audioFile);
-                            if(caps.length) meta.chapters = caps;
-                        } catch(e) { console.warn("Chapter extract failed", e); }
-                    }
-                    await DB.setActiveAudio(audioFile);
-                    await DB.saveMetadata(meta);
-                    localStorage.setItem('activeBookId', id);
-                    this.currentBook = meta;
-                    this.activeAudioBlob = audioFile;
-                    this.launchPlayer();
-                } else if (srtFile) { alert("Please drop the audio file too, or use +CC button in player."); }
-                else { alert("Please drop the Audio File."); }
-            } catch (e) { console.error(e); alert("Error processing file."); } 
-            finally { document.getElementById('loading-overlay').classList.add('hidden'); }
-        }, 50);
-    },
-    async handleSrtUpload(file) {
-        if (!file || !this.currentBook) return;
-        try {
-            const subs = await this.parseSrt(file);
-            this.currentBook.subs = subs;
-            await DB.saveMetadata(this.currentBook);
-            Player.meta = this.currentBook;
-            Player.subs = subs;
-            Player.renderSubs();
-            Player.syncSub();
-            alert("Subtitles loaded!");
-        } catch(e) { alert("Failed to parse SRT"); }
-    },
-    async loadBookFromHistory(id) {
-        const books = await DB.getAllMetadata();
-        const book = books.find(b => b.id === id);
-        if(!book) return;
-        const activeId = localStorage.getItem('activeBookId');
-        if (activeId === book.id) {
-            const blob = await DB.getActiveAudio();
-            if (blob) { this.currentBook = book; this.activeAudioBlob = blob; this.launchPlayer(); return; }
-        }
-        alert(`File not cached. Please drag & drop "${book.title}" audio file again.`);
-    },
-    async deleteBook(id, event) {
-        event.stopPropagation();
-        if(!confirm("Delete this book's history?")) return;
-        await DB.deleteMetadata(id);
-        const activeId = localStorage.getItem('activeBookId');
-        if(activeId === id) { await DB.clearActive(); localStorage.removeItem('activeBookId'); }
-        this.renderLibrary();
-    },
-    async deleteActive(event) {
-        event.stopPropagation();
-        if(!confirm("Clear active resume data?")) return;
-        await DB.clearActive();
-        localStorage.removeItem('activeBookId');
-        this.renderLibrary();
-    },
-    async resumeActive() {
-        const activeId = localStorage.getItem('activeBookId');
-        if(!activeId) return;
-        const all = await DB.getAllMetadata();
-        const meta = all.find(b => b.id === activeId);
-        const blob = await DB.getActiveAudio();
-        if(meta && blob) { this.currentBook = meta; this.activeAudioBlob = blob; this.launchPlayer(); }
-    },
-    launchPlayer() {
-        document.getElementById('view-library').classList.add('hidden');
-        document.getElementById('view-player').classList.remove('hidden');
-        Player.load(this.currentBook, this.activeAudioBlob);
-    },
-    showLibrary() {
-        Player.pause();
-        document.getElementById('sub-list').innerHTML = '';
-        this.renderLibrary();
-    },
-    toggleFocusMode() {
-        const el = document.getElementById('view-focus');
-        el.classList.toggle('hidden');
-        if (!el.classList.contains('hidden')) { document.documentElement.requestFullscreen().catch(e=>{}); }
-        else { if (document.fullscreenElement) document.exitFullscreen(); }
-    },
-    toggleChapters() {
-        const list = document.getElementById('chapter-list');
-        list.classList.toggle('open');
-        if(list.classList.contains('open')) Player.syncChapterActive();
-    },
-    hashCode(str) {
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) { hash = ((hash << 5) - hash) + str.charCodeAt(i); hash |= 0; }
-        return hash;
-    },
-    async parseSrt(file) {
-        const text = await file.text();
-        const pattern = /(\d+)\n(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})\n((?:(?!\d+\n).)*)/gs;
-        const matches = [...text.replace(/\r\n/g, '\n').matchAll(pattern)];
-        return matches.map(m => ({ start: this.timeToSec(m[2]), end: this.timeToSec(m[3]), text: m[4].trim() }));
-    },
-    async parseJsonChapters(file) { try { return JSON.parse(await file.text()); } catch(e) { return []; } },
-    timeToSec(tStr) {
-        const [h, m, s] = tStr.replace(',', '.').split(':');
-        return parseFloat(h)*3600 + parseFloat(m)*60 + parseFloat(s);
-    },
-    fmtTime(s) {
-        if (isNaN(s)) return "00:00";
-        const h = Math.floor(s / 3600);
-        const m = Math.floor((s % 3600) / 60);
-        const sec = Math.floor(s % 60);
-        if (h > 0) return `${h}:${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
-        return `${m}:${sec.toString().padStart(2,'0')}`;
-    }
-};
-
-const Player = {
-    audio: document.getElementById('audio-el'),
-    meta: null, subs: [],
-    elTitle: document.getElementById('player-title'), elSubList: document.getElementById('sub-list'),
-    elSeek: document.getElementById('seek-bar'), elFill: document.getElementById('seek-fill'), elMarkers: document.getElementById('seek-markers'),
-    elTCurr: document.getElementById('t-curr'), elTTotal: document.getElementById('t-total'),
-    elBtnPlay: document.getElementById('btn-play'), elFocusText: document.getElementById('focus-text'),
-    elChapList: document.getElementById('chapter-list'),
-
-    load(meta, blob) {
-        this.meta = meta; this.subs = meta.subs || [];
-        this.elTitle.textContent = meta.title;
-        this.audio.src = URL.createObjectURL(blob);
-        this.audio.currentTime = meta.progress || 0;
-        this.renderSubs(); this.renderChapters();
-        this.audio.onloadedmetadata = () => {
-            this.elSeek.max = this.audio.duration;
-            this.elTTotal.textContent = App.fmtTime(this.audio.duration);
-            if (this.meta.duration !== this.audio.duration) { this.meta.duration = this.audio.duration; this.save(); }
-            this.renderMarkers();
-        };
-        this.audio.ontimeupdate = () => {
-            if (!this.isSeeking) { 
-                this.elSeek.value = this.audio.currentTime; 
-                this.elTCurr.textContent = App.fmtTime(this.audio.currentTime); 
-                if(this.audio.duration > 0) this.elFill.style.width = (this.audio.currentTime / this.audio.duration * 100) + "%";
+                pos += 10 + size;
             }
-            this.syncSub(); this.syncChapterActive();
-            if (Math.floor(this.audio.currentTime) % 10 === 0) this.save();
-        };
-        this.audio.onplay = () => this.updateBtn();
-        this.audio.onpause = () => { this.updateBtn(); this.save(); };
-    },
-    renderSubs() {
-        this.elSubList.innerHTML = '';
-        if (this.subs.length === 0) { 
-            this.elSubList.innerHTML = `
-                <div class="srt-empty-container">
-                    <div class="srt-empty" onclick="document.getElementById('srt-upload').click()">
-                        <div class="srt-empty-icon">📝</div>
-                        <div style="font-weight:bold; font-size:1.2rem; margin-bottom:5px;">No Subtitles Loaded</div>
-                        <div style="font-size:0.9rem;">Drop .srt file here or click to upload</div>
-                    </div>
-                </div>`; 
-            
-            const emptyZone = this.elSubList.querySelector('.srt-empty');
-            emptyZone.addEventListener('dragover', e => { e.preventDefault(); emptyZone.style.borderColor = 'var(--primary)'; });
-            emptyZone.addEventListener('dragleave', e => { e.preventDefault(); emptyZone.style.borderColor = '#333'; });
-            emptyZone.addEventListener('drop', e => {
-                e.preventDefault(); e.stopPropagation();
-                if(e.dataTransfer.files.length > 0) App.handleSrtUpload(e.dataTransfer.files[0]);
-            });
-            return; 
+            return meta;
         }
-        const frag = document.createDocumentFragment();
-        this.subs.forEach((s, i) => {
-            const li = document.createElement('li'); li.textContent = s.text; li.id = `s-${i}`;
-            li.onclick = () => { this.audio.currentTime = s.start + 0.01; this.audio.play(); };
-            frag.appendChild(li);
-        });
-        this.elSubList.appendChild(frag);
-    },
+    };
     
-    // SAFE Time Getter helper
-    getChapTime(c) {
-        if (c.start !== undefined) return Number(c.start);
-        if (c.time !== undefined) return Number(c.time);
-        return 0;
-    },
-
-    renderChapters() {
-        this.elChapList.innerHTML = '';
-        const chaps = this.meta.chapters || [];
-        if (chaps.length === 0) { this.elChapList.innerHTML = '<div class="chap-empty">No Chapters found</div>'; return; }
-        chaps.forEach((c, i) => {
-            const div = document.createElement('div'); div.className = 'chap-item'; div.id = `chap-${i}`;
-            const time = this.getChapTime(c);
-            div.innerHTML = `<span class="chap-time">${App.fmtTime(time)}</span> <span class="chap-title" title="${c.title}">${c.title}</span>`;
-            div.onclick = () => { this.audio.currentTime = time; this.audio.play(); };
-            this.elChapList.appendChild(div);
-        });
-    },
-    renderMarkers() {
-        this.elMarkers.innerHTML = '';
-        const dur = this.audio.duration;
-        const chaps = this.meta.chapters || [];
-        if (dur > 0 && chaps.length > 0) {
-            chaps.forEach(c => {
-                const t = this.getChapTime(c);
-                if (t > 0) {
-                    const mk = document.createElement('div'); mk.className = 'chap-marker'; mk.style.left = (t / dur * 100) + '%';
-                    this.elMarkers.appendChild(mk);
+    // --- DB & APP ---
+    const DB = {
+        db: null,
+        async init() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open('KikiYomiDB', 1);
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('metadata')) db.createObjectStore('metadata', { keyPath: 'id' });
+                    if (!db.objectStoreNames.contains('media')) db.createObjectStore('media', { keyPath: 'key' });
+                };
+                req.onsuccess = (e) => { this.db = e.target.result; resolve(); };
+                req.onerror = (e) => reject(e);
+            });
+        },
+        async saveMetadata(book) {
+            const tx = this.db.transaction('metadata', 'readwrite');
+            tx.objectStore('metadata').put(book);
+            return new Promise(r => tx.oncomplete = r);
+        },
+        async deleteMetadata(id) {
+            const tx = this.db.transaction('metadata', 'readwrite');
+            tx.objectStore('metadata').delete(id);
+            return new Promise(r => tx.oncomplete = r);
+        },
+        async getAllMetadata() {
+            return new Promise(r => {
+                const req = this.db.transaction('metadata').objectStore('metadata').getAll();
+                req.onsuccess = () => r(req.result);
+            });
+        },
+        async setActiveAudio(blob) {
+            const tx = this.db.transaction('media', 'readwrite');
+            tx.objectStore('media').put({ key: 'active', blob: blob });
+            return new Promise(r => tx.oncomplete = r);
+        },
+        async getActiveAudio() {
+            return new Promise(r => {
+                const req = this.db.transaction('media').objectStore('media').get('active');
+                req.onsuccess = () => r(req.result ? req.result.blob : null);
+            });
+        },
+        async clearActive() {
+            const tx = this.db.transaction('media', 'readwrite');
+            tx.objectStore('media').delete('active');
+            return new Promise(r => tx.oncomplete = r);
+        }
+    };
+    
+    const App = {
+        currentBook: null, activeAudioBlob: null,
+        settings: { font: '', size: 36, fillGap: true, bold: false, focusWidth: 90, activeScale: 1.05 },
+        async init() {
+            await DB.init();
+            this.loadSettings();
+            this.renderLibrary();
+            const dz = document.getElementById('drop-zone');
+            
+            dz.onclick = () => {
+                if ('showOpenFilePicker' in window) { this.pickFile(); } 
+                else { document.getElementById('file-input').click(); }
+            };
+            
+            document.getElementById('file-input').onchange = (e) => this.handleFiles(e.target.files);
+            document.getElementById('srt-upload').onchange = (e) => this.handleSrtUpload(e.target.files[0]);
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(n => {
+                document.body.addEventListener(n, e => { e.preventDefault(); e.stopPropagation(); }, false);
+            });
+            document.body.addEventListener('dragover', () => dz.classList.add('dragover'));
+            document.body.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+            
+            // Fixed Chrome Drop Logic
+            document.body.addEventListener('drop', async (e) => {
+                dz.classList.remove('dragover');
+                // Map items to promises immediately to prevent token expiration
+                const filePromises = [...e.dataTransfer.items]
+                    .filter(item => item.kind === 'file')
+                    .map(async (item) => {
+                        const file = item.getAsFile();
+                        let handle = null;
+                        if ('getAsFileSystemHandle' in item) {
+                            try { handle = await item.getAsFileSystemHandle(); } catch(err){}
+                        }
+                        if(handle && handle.kind === 'file') file.handle = handle;
+                        return file;
+                    });
+                
+                if (filePromises.length > 0) {
+                    const files = await Promise.all(filePromises);
+                    this.handleFiles(files);
+                } else {
+                    this.handleFiles(e.dataTransfer.files);
                 }
             });
-        }
-    },
-    activeIndex: -1,
-    syncSub() {
-        const t = this.audio.currentTime; let idx = -1;
-        for (let i = 0; i < this.subs.length; i++) { if (t >= this.subs[i].start && t <= this.subs[i].end) { idx = i; break; } }
-        if (idx === -1 && App.settings.fillGap) {
-            for (let i = 0; i < this.subs.length; i++) {
-                const nextStart = (i < this.subs.length - 1) ? this.subs[i+1].start : Number.MAX_VALUE;
-                if (t >= this.subs[i].start && t < nextStart) { idx = i; break; }
-            }
-        }
-        if (idx !== this.activeIndex) {
-            if (this.activeIndex !== -1) document.getElementById(`s-${this.activeIndex}`)?.classList.remove('active');
-            this.activeIndex = idx;
-            let text = "...";
-            if (idx !== -1) {
-                const el = document.getElementById(`s-${idx}`);
-                if(el) { el.classList.add('active'); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); text = this.subs[idx].text; }
-            }
-            this.elFocusText.textContent = text;
-        }
-    },
-    currentChapIdx: -1,
-    syncChapterActive() {
-        const chaps = this.meta.chapters || [];
-        if(chaps.length === 0) return;
-        const t = this.audio.currentTime;
-        let idx = -1;
-        
-        for(let i=0; i<chaps.length; i++) { 
-            const start = this.getChapTime(chaps[i]);
-            if(t >= start) idx = i;
-            else break;
-        }
+            Input.init();
+        },
+        async pickFile() {
+            try {
+                const handles = await window.showOpenFilePicker({
+                    types: [{ description: 'Audio & Subtitles', accept: { 'audio/*': ['.mp3', '.m4b', '.aac', '.m4a'], 'text/plain': ['.srt', '.json'] } }],
+                    multiple: true
+                });
+                const files = [];
+                for (const h of handles) {
+                    const f = await h.getFile(); f.handle = h; files.push(f);
+                }
+                this.handleFiles(files);
+            } catch(e) { }
+        },
+        loadSettings() {
+            this.settings.font = localStorage.getItem('ky_font') || "system-ui, -apple-system, sans-serif";
+            this.settings.size = parseInt(localStorage.getItem('ky_size') || "36");
+            this.settings.fillGap = localStorage.getItem('ky_fill') !== "false"; 
+            this.settings.bold = localStorage.getItem('ky_bold') === "true"; 
+            this.settings.focusWidth = parseInt(localStorage.getItem('ky_focus_width') || "90");
+            this.settings.activeScale = parseFloat(localStorage.getItem('ky_active_scale') || "1.05");
+    
+            document.getElementById('opt-font').value = this.settings.font;
+            document.getElementById('opt-size').value = this.settings.size;
+            document.getElementById('opt-fill').checked = this.settings.fillGap;
+            document.getElementById('opt-bold').checked = this.settings.bold;
+            document.getElementById('opt-focus-width').value = this.settings.focusWidth;
+            document.getElementById('opt-active-scale').value = this.settings.activeScale;
+            this.applySettings();
+        },
+        applySettings() {
+            this.settings.font = document.getElementById('opt-font').value;
+            this.settings.size = parseInt(document.getElementById('opt-size').value);
+            this.settings.fillGap = document.getElementById('opt-fill').checked;
+            this.settings.bold = document.getElementById('opt-bold').checked;
+            this.settings.focusWidth = parseInt(document.getElementById('opt-focus-width').value);
+            this.settings.activeScale = parseFloat(document.getElementById('opt-active-scale').value);
+    
+            document.documentElement.style.setProperty('--font-reader', this.settings.font);
+            document.documentElement.style.setProperty('--font-size-base', this.settings.size + 'px');
+            document.documentElement.style.setProperty('--active-weight', this.settings.bold ? 'bold' : 'normal');
+            document.documentElement.style.setProperty('--focus-width', this.settings.focusWidth + '%');
+            document.documentElement.style.setProperty('--active-scale', this.settings.activeScale);
+    
+            localStorage.setItem('ky_font', this.settings.font);
+            localStorage.setItem('ky_size', this.settings.size);
+            localStorage.setItem('ky_fill', this.settings.fillGap);
+            localStorage.setItem('ky_bold', this.settings.bold);
+            localStorage.setItem('ky_focus_width', this.settings.focusWidth);
+            localStorage.setItem('ky_active_scale', this.settings.activeScale);
+            
+            if (Player.meta) Player.syncSub(); 
+        },
+        toggleModal(id) { document.getElementById(id).classList.toggle('hidden'); },
+        async renderLibrary() {
+            document.getElementById('view-library').classList.remove('hidden');
+            document.getElementById('view-player').classList.add('hidden');
+            document.getElementById('view-focus').classList.add('hidden');
+            
+            const allBooks = await DB.getAllMetadata();
+            allBooks.sort((a, b) => b.lastPlayed - a.lastPlayed);
+            const cachedAudio = await DB.getActiveAudio();
+            const activeId = localStorage.getItem('activeBookId');
+            
+            const list = document.getElementById('library-list');
+            list.innerHTML = '';
+            
+            allBooks.forEach(book => {
+                const isActive = (book.id === activeId);
+                const isCached = isActive && cachedAudio;
+                
+                const div = document.createElement('div');
+                div.className = 'lib-item';
+                if (isActive && isCached) div.classList.add('active-book');
+                
+                let badges = '';
+                if (isActive && isCached) badges += '<span class="badge playing">Now Playing</span> ';
+                else if (book.handle) badges += '<span class="badge linked">Linked</span> ';
+                
+                const pct = book.duration > 0 ? (book.progress / book.duration * 100).toFixed(1) : 0;
+                
+                let imgHtml = '<div class="lib-cover">💿</div>';
+                if (book.cover && book.cover.blob) {
+                    const url = URL.createObjectURL(book.cover.blob);
+                    imgHtml = `<img class="lib-cover" src="${url}">`;
+                }
 
-        if(idx !== this.currentChapIdx) {
-            document.getElementById(`chap-${this.currentChapIdx}`)?.classList.remove('active-chap');
-            this.currentChapIdx = idx;
-            if (idx !== -1) {
-                const el = document.getElementById(`chap-${idx}`);
-                if(el) {
-                    el.classList.add('active-chap');
-                    if(document.getElementById('chapter-list').classList.contains('open')) { 
-                        el.scrollIntoView({ behavior:'smooth', block:'center' }); 
+                div.innerHTML = `
+                <div style="display:flex; align-items:center; flex:1; height:100%; overflow:hidden;" onclick="App.loadBookFromHistory('${book.id}')">
+                    ${imgHtml}
+                    <div class="lib-info">
+                        <div class="lib-title">${book.title}</div>
+                        <div class="lib-meta">${Utils.fmtTime(book.progress)} / ${Utils.fmtTime(book.duration)} ${badges}</div>
+                        <div class="progress-bar-mini"><div class="progress-fill-mini" style="width:${pct}%"></div></div>
+                    </div>
+                </div>
+                <button class="del-btn" onclick="App.deleteBook('${book.id}', event)">×</button>`;
+                list.appendChild(div);
+            });
+            
+            if (list.children.length === 0) {
+                list.innerHTML = '<div style="text-align:center; padding:20px; color:#444;">Library is empty</div>';
+            }
+        },
+        async handleFiles(files) {
+            document.getElementById('loading-overlay').classList.remove('hidden');
+            setTimeout(async () => {
+                try {
+                    let audioFile = null, srtFile = null, jsonFile = null;
+                    const getExt = (name) => name.split('.').pop().toLowerCase();
+                    for (let f of files) {
+                        const ext = getExt(f.name);
+                        if (['mp3','m4b','aac','mp4','m4a'].includes(ext)) audioFile = f;
+                        if (ext === 'srt') srtFile = f;
+                        if (ext === 'json') jsonFile = f;
+                    }
+                    if (audioFile) {
+                        const id = "b_" + Math.abs(this.hashCode(audioFile.name));
+                        let meta = (await DB.getAllMetadata()).find(b => b.id === id);
+                        if (!meta) {
+                            meta = {
+                                id: id, title: audioFile.name.replace(/\.(mp3|m4b|aac|mp4|m4a)$/i, ''),
+                                duration: 0, progress: 0, lastPlayed: Date.now(), subs: [], chapters: [], cover: null
+                            };
+                        }
+                        if (audioFile.handle) meta.handle = audioFile.handle;
+                        
+                        let parsed = {};
+                        if (getExt(audioFile.name) === 'mp3') parsed = await ID3Parser.parse(audioFile);
+                        else parsed = await M4BParser.parse(audioFile);
+                        
+                        if (parsed.chapters && parsed.chapters.length) meta.chapters = parsed.chapters;
+                        if (parsed.cover) meta.cover = parsed.cover;
+                        if (parsed.tags && parsed.tags.Title && meta.progress === 0) meta.title = parsed.tags.Title;
+
+                        if (srtFile) meta.subs = await this.parseSrt(srtFile);
+                        if (jsonFile) meta.chapters = await this.parseJsonChapters(jsonFile);
+                        
+                        await DB.setActiveAudio(audioFile);
+                        await DB.saveMetadata(meta);
+                        localStorage.setItem('activeBookId', id);
+                        this.currentBook = meta;
+                        this.activeAudioBlob = audioFile;
+                        this.launchPlayer();
+                    } else if (srtFile) { alert("Please drop the audio file too, or use +CC button in player."); }
+                    else { alert("Please drop the Audio File."); }
+                } catch (e) { console.error(e); alert("Error processing file."); } 
+                finally { document.getElementById('loading-overlay').classList.add('hidden'); }
+            }, 50);
+        },
+        async handleSrtUpload(file) {
+            if (!file || !this.currentBook) return;
+            try {
+                const subs = await this.parseSrt(file);
+                this.currentBook.subs = subs;
+                await DB.saveMetadata(this.currentBook);
+                Player.meta = this.currentBook;
+                Player.subs = subs;
+                Player.renderSubs();
+                Player.syncSub();
+                alert("Subtitles loaded!");
+            } catch(e) { alert("Failed to parse SRT"); }
+        },
+        async loadBookFromHistory(id) {
+            const books = await DB.getAllMetadata();
+            const book = books.find(b => b.id === id);
+            if(!book) return;
+            
+            const activeId = localStorage.getItem('activeBookId');
+            if (activeId === book.id) {
+                const blob = await DB.getActiveAudio();
+                if (blob) { this.currentBook = book; this.activeAudioBlob = blob; this.launchPlayer(); return; }
+            }
+    
+            if (book.handle) {
+                try {
+                    const perm = await book.handle.queryPermission({ mode: 'read' });
+                    if (perm === 'granted' || (await book.handle.requestPermission({ mode: 'read' })) === 'granted') {
+                        const file = await book.handle.getFile();
+                        file.handle = book.handle;
+                        await DB.setActiveAudio(file);
+                        localStorage.setItem('activeBookId', book.id);
+                        this.currentBook = book;
+                        this.activeAudioBlob = file;
+                        this.launchPlayer();
+                        return;
+                    }
+                } catch (e) { console.warn(e); }
+            }
+    
+            this.pendingBookId = id;
+            document.getElementById('req-filename').textContent = book.title + " (Audio File)";
+            document.getElementById('modal-file-req').classList.remove('hidden');
+        },
+        pendingBookId: null,
+        triggerFileSelect() {
+            document.getElementById('modal-file-req').classList.add('hidden');
+            document.getElementById('file-input').click();
+        },
+        async deleteBook(id, event) {
+            event.stopPropagation();
+            if(!confirm("Delete this book's history?")) return;
+            await DB.deleteMetadata(id);
+            const activeId = localStorage.getItem('activeBookId');
+            if(activeId === id) { await DB.clearActive(); localStorage.removeItem('activeBookId'); }
+            this.renderLibrary();
+        },
+        async deleteActive(event) {
+            event.stopPropagation();
+            if(!confirm("Clear active resume data?")) return;
+            await DB.clearActive();
+            localStorage.removeItem('activeBookId');
+            this.renderLibrary();
+        },
+        async resumeActive() {
+            const activeId = localStorage.getItem('activeBookId');
+            if(!activeId) return;
+            const all = await DB.getAllMetadata();
+            const meta = all.find(b => b.id === activeId);
+            const blob = await DB.getActiveAudio();
+            if(meta && blob) { this.currentBook = meta; this.activeAudioBlob = blob; this.launchPlayer(); }
+        },
+        launchPlayer() {
+            document.getElementById('view-library').classList.add('hidden');
+            document.getElementById('view-player').classList.remove('hidden');
+            Player.load(this.currentBook, this.activeAudioBlob);
+        },
+        showLibrary() {
+            Player.pause();
+            document.getElementById('sub-list').innerHTML = '';
+            this.renderLibrary();
+        },
+        toggleFocusMode() {
+            const el = document.getElementById('view-focus');
+            el.classList.toggle('hidden');
+            if (!el.classList.contains('hidden')) { document.documentElement.requestFullscreen().catch(e=>{}); }
+            else { if (document.fullscreenElement) document.exitFullscreen(); }
+        },
+        toggleChapters() {
+            const list = document.getElementById('chapter-list');
+            list.classList.toggle('open');
+            if(list.classList.contains('open')) Player.syncChapterActive();
+        },
+        hashCode(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) { hash = ((hash << 5) - hash) + str.charCodeAt(i); hash |= 0; }
+            return hash;
+        },
+        async parseSrt(file) {
+            const text = await file.text();
+            const pattern = /(\d+)\n(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})\n((?:(?!\d+\n).)*)/gs;
+            const matches = [...text.replace(/\r\n/g, '\n').matchAll(pattern)];
+            return matches.map(m => ({ start: this.timeToSec(m[2]), end: this.timeToSec(m[3]), text: m[4].trim() }));
+        },
+        async parseJsonChapters(file) { try { return JSON.parse(await file.text()); } catch(e) { return []; } },
+        timeToSec(tStr) {
+            const [h, m, s] = tStr.replace(',', '.').split(':');
+            return parseFloat(h)*3600 + parseFloat(m)*60 + parseFloat(s);
+        }
+    };
+    
+    const Player = {
+        audio: document.getElementById('audio-el'),
+        meta: null, subs: [],
+        elTitle: document.getElementById('player-title'), elSubList: document.getElementById('sub-list'),
+        elSeek: document.getElementById('seek-bar'), elFill: document.getElementById('seek-fill'), elMarkers: document.getElementById('seek-markers'),
+        elTCurr: document.getElementById('t-curr'), elTTotal: document.getElementById('t-total'),
+        elBtnPlay: document.getElementById('btn-play'), elFocusText: document.getElementById('focus-text'),
+        elChapList: document.getElementById('chapter-list'),
+    
+        load(meta, blob) {
+            this.meta = meta; this.subs = meta.subs || [];
+            this.elTitle.textContent = meta.title;
+            this.audio.src = URL.createObjectURL(blob);
+            this.audio.currentTime = meta.progress || 0;
+            
+            this.renderSubs(); this.renderChapters();
+            this.audio.onloadedmetadata = () => {
+                this.elSeek.max = this.audio.duration;
+                this.elTTotal.textContent = Utils.fmtTime(this.audio.duration);
+                if (this.meta.duration !== this.audio.duration) { this.meta.duration = this.audio.duration; this.save(); }
+                this.renderMarkers();
+            };
+            this.audio.ontimeupdate = () => {
+                if (!this.isSeeking) { 
+                    this.elSeek.value = this.audio.currentTime; 
+                    this.elTCurr.textContent = Utils.fmtTime(this.audio.currentTime); 
+                    if(this.audio.duration > 0) this.elFill.style.width = (this.audio.currentTime / this.audio.duration * 100) + "%";
+                }
+                this.syncSub(); this.syncChapterActive();
+                if (Math.floor(this.audio.currentTime) % 10 === 0) this.save();
+            };
+            this.audio.onplay = () => this.updateBtn();
+            this.audio.onpause = () => { this.updateBtn(); this.save(); };
+        },
+        renderSubs() {
+            this.elSubList.innerHTML = '';
+            if (this.subs.length === 0) { 
+                this.elSubList.innerHTML = `
+                    <div class="srt-empty-container">
+                        <div class="srt-empty" onclick="if('showOpenFilePicker' in window){App.pickFile()}else{document.getElementById('file-input').click()}">
+                            <div class="srt-empty-icon">📝</div>
+                            <div style="font-weight:bold; font-size:1.2rem; margin-bottom:5px;">No Subtitles Loaded</div>
+                            <div style="font-size:0.9rem;">Drop .srt file or click to add</div>
+                        </div>
+                    </div>`; 
+                const emptyZone = this.elSubList.querySelector('.srt-empty');
+                emptyZone.addEventListener('dragover', e => { e.preventDefault(); emptyZone.style.borderColor = 'var(--primary)'; });
+                emptyZone.addEventListener('dragleave', e => { e.preventDefault(); emptyZone.style.borderColor = '#333'; });
+                emptyZone.addEventListener('drop', e => { e.preventDefault(); e.stopPropagation(); if(e.dataTransfer.files.length > 0) App.handleSrtUpload(e.dataTransfer.files[0]); });
+                return; 
+            }
+            const frag = document.createDocumentFragment();
+            this.subs.forEach((s, i) => {
+                const li = document.createElement('li'); li.textContent = s.text; li.id = `s-${i}`;
+                li.onclick = () => { this.audio.currentTime = s.start + 0.001; this.audio.play(); };
+                frag.appendChild(li);
+            });
+            this.elSubList.appendChild(frag);
+        },
+        getChapTime(c) {
+            if (c.start !== undefined) return Number(c.start);
+            if (c.time !== undefined) return Number(c.time);
+            return 0;
+        },
+        renderChapters() {
+            this.elChapList.innerHTML = '';
+            const chaps = this.meta.chapters || [];
+            if (chaps.length === 0) { this.elChapList.innerHTML = '<div class="chap-empty">No Chapters found</div>'; return; }
+            chaps.forEach((c, i) => {
+                const div = document.createElement('div'); div.className = 'chap-item'; div.id = `chap-${i}`;
+                const time = this.getChapTime(c);
+                div.innerHTML = `<span class="chap-time">${Utils.fmtTime(time)}</span> <span class="chap-title" title="${c.title}">${c.title}</span>`;
+                div.onclick = () => { this.audio.currentTime = time; this.audio.play(); };
+                this.elChapList.appendChild(div);
+            });
+        },
+        renderMarkers() {
+            this.elMarkers.innerHTML = '';
+            const dur = this.audio.duration;
+            const chaps = this.meta.chapters || [];
+            if (dur > 0 && chaps.length > 0) {
+                chaps.forEach(c => {
+                    const t = this.getChapTime(c);
+                    if (t > 0) {
+                        const mk = document.createElement('div'); mk.className = 'chap-marker'; mk.style.left = (t / dur * 100) + '%';
+                        this.elMarkers.appendChild(mk);
+                    }
+                });
+            }
+        },
+        activeIndex: -1,
+        syncSub() {
+            const t = this.audio.currentTime; let idx = -1;
+            for (let i = 0; i < this.subs.length; i++) { if (t >= this.subs[i].start && t <= this.subs[i].end) { idx = i; break; } }
+            if (idx === -1 && App.settings.fillGap && this.subs.length > 0) {
+                for (let i = 0; i < this.subs.length - 1; i++) {
+                    if (t > this.subs[i].end && t < this.subs[i+1].start) {
+                        const mid = (this.subs[i].end + this.subs[i+1].start) / 2;
+                        if (t < mid) idx = i; else idx = i + 1; break;
                     }
                 }
+                if (idx === -1 && t > this.subs[this.subs.length-1].end) idx = this.subs.length - 1;
             }
-        }
-    },
-    pause() { this.audio.pause(); },
-    togglePlay() { this.audio.paused ? this.audio.play() : this.audio.pause(); },
-    prevSub() {
-        if(this.subs.length > 0) {
-            let target = -1;
-            if (this.activeIndex > -1) {
-                if (this.audio.currentTime > this.subs[this.activeIndex].start + 2) target = this.activeIndex;
-                else target = Math.max(0, this.activeIndex - 1);
-            } else {
-                const t = this.audio.currentTime;
-                for(let i=0; i<this.subs.length; i++) if (this.subs[i].end < t) target = i; else break;
+            if (idx !== this.activeIndex) {
+                if (this.activeIndex !== -1) document.getElementById(`s-${this.activeIndex}`)?.classList.remove('active');
+                this.activeIndex = idx;
+                let text = "...";
+                if (idx !== -1) {
+                    const el = document.getElementById(`s-${idx}`);
+                    if(el) { el.classList.add('active'); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); text = this.subs[idx].text; }
+                }
+                this.elFocusText.textContent = text;
             }
-            if (target > -1) this.audio.currentTime = this.subs[target].start + 0.01;
-        } else { this.audio.currentTime = Math.max(0, this.audio.currentTime - 15); }
-    },
-    nextSub() {
-        if(this.subs.length > 0) {
-            let target = -1;
-            if (this.activeIndex > -1) target = Math.min(this.subs.length - 1, this.activeIndex + 1);
-            else {
-                const t = this.audio.currentTime;
-                for(let i=0; i<this.subs.length; i++) if (this.subs[i].start > t) { target = i; break; }
+        },
+        currentChapIdx: -1,
+        syncChapterActive() {
+            const chaps = this.meta.chapters || []; if(chaps.length === 0) return;
+            const t = this.audio.currentTime; let idx = -1;
+            for(let i=0; i<chaps.length; i++) if(t >= this.getChapTime(chaps[i])) idx = i; else break;
+            if(idx !== this.currentChapIdx) {
+                document.getElementById(`chap-${this.currentChapIdx}`)?.classList.remove('active-chap');
+                this.currentChapIdx = idx;
+                if (idx !== -1) {
+                    const el = document.getElementById(`chap-${idx}`);
+                    if(el) { el.classList.add('active-chap'); if(document.getElementById('chapter-list').classList.contains('open')) el.scrollIntoView({ behavior:'smooth', block:'center' }); }
+                }
             }
-            if (target > -1) this.audio.currentTime = this.subs[target].start + 0.01;
-        } else { this.audio.currentTime = Math.min(this.audio.duration, this.audio.currentTime + 15); }
-    },
-    replaySub() {
-        if(this.subs.length > 0) {
-            if (this.activeIndex > -1) { this.audio.currentTime = this.subs[this.activeIndex].start + 0.01; if (this.audio.paused) this.audio.play(); }
-            else {
-                const t = this.audio.currentTime; let last = -1;
-                for(let i=0; i<this.subs.length; i++) if (this.subs[i].start <= t) last = i; else break;
-                if (last > -1) { this.audio.currentTime = this.subs[last].start + 0.01; if(this.audio.paused) this.audio.play(); }
+        },
+        pause() { this.audio.pause(); },
+        togglePlay() { this.audio.paused ? this.audio.play() : this.audio.pause(); },
+        prevSub() {
+            if(this.subs.length > 0) {
+                let target = -1;
+                if (this.activeIndex > -1) target = Math.max(0, this.activeIndex - 1);
+                else { const t = this.audio.currentTime; for(let i=0; i<this.subs.length; i++) if (this.subs[i].end < t) target = i; else break; }
+                if (target > -1) this.audio.currentTime = this.subs[target].start + 0.001;
+            } else { this.audio.currentTime = Math.max(0, this.audio.currentTime - 15); }
+        },
+        nextSub() {
+            if(this.subs.length > 0) {
+                let target = -1;
+                if (this.activeIndex > -1) target = Math.min(this.subs.length - 1, this.activeIndex + 1);
+                else { const t = this.audio.currentTime; for(let i=0; i<this.subs.length; i++) if (this.subs[i].start > t) { target = i; break; } }
+                if (target > -1) this.audio.currentTime = this.subs[target].start + 0.001;
+            } else { this.audio.currentTime = Math.min(this.audio.duration, this.audio.currentTime + 15); }
+        },
+        replaySub() {
+            if(this.subs.length > 0) {
+                if (this.activeIndex > -1) { this.audio.currentTime = this.subs[this.activeIndex].start + 0.001; }
+                else { const t = this.audio.currentTime; let last = -1; for(let i=0; i<this.subs.length; i++) if (this.subs[i].start <= t) last = i; else break; if (last > -1) this.audio.currentTime = this.subs[last].start + 0.001; }
+            } else { this.audio.currentTime = Math.max(0, this.audio.currentTime - 5); }
+        },
+        prevChap() {
+            const chaps = this.meta.chapters || []; if(chaps.length === 0) return;
+            const t = this.audio.currentTime; let idx = -1;
+            for(let i=0; i<chaps.length; i++) if(t >= this.getChapTime(chaps[i])) idx = i; else break; 
+            if (idx === -1) { if (t > 5) { this.audio.currentTime = 0; return; } return; }
+            const currStart = this.getChapTime(chaps[idx]);
+            if (t > currStart + 3) this.audio.currentTime = currStart; 
+            else { if (idx > 0) this.audio.currentTime = this.getChapTime(chaps[idx-1]); else this.audio.currentTime = 0; }
+        },
+        nextChap() {
+            const chaps = this.meta.chapters || []; if(chaps.length === 0) return;
+            const t = this.audio.currentTime; let target = -1;
+            for(let i=0; i<chaps.length; i++) if(this.getChapTime(chaps[i]) > t) { target = i; break; }
+            if (target > -1) this.audio.currentTime = this.getChapTime(chaps[target]);
+        },
+        updateBtn() { this.elBtnPlay.textContent = this.audio.paused ? "▶" : "❚❚"; },
+        save() { if (!this.meta) return; this.meta.progress = this.audio.currentTime; this.meta.lastPlayed = Date.now(); DB.saveMetadata(this.meta); },
+        isSeeking: false
+    };
+    
+    const seekBar = document.getElementById('seek-bar');
+    const seekFill = document.getElementById('seek-fill');
+    seekBar.addEventListener('mousedown', () => Player.isSeeking = true);
+    seekBar.addEventListener('touchstart', () => Player.isSeeking = true);
+    seekBar.addEventListener('change', (e) => { Player.audio.currentTime = e.target.value; Player.isSeeking = false; if(Player.audio.duration) seekFill.style.width = (Player.audio.currentTime / Player.audio.duration * 100) + "%"; });
+    seekBar.addEventListener('input', (e) => { document.getElementById('t-curr').textContent = Utils.fmtTime(e.target.value); if(Player.audio.duration) seekFill.style.width = (e.target.value / Player.audio.duration * 100) + "%"; });
+    
+    const focusView = document.getElementById('view-focus');
+    let longPressTimer;
+    const startFocusAction = () => { longPressTimer = setTimeout(() => App.toggleFocusMode(), 1000); };
+    const endFocusAction = () => clearTimeout(longPressTimer);
+    focusView.addEventListener('mousedown', startFocusAction); focusView.addEventListener('mouseup', endFocusAction);
+    focusView.addEventListener('touchstart', startFocusAction); focusView.addEventListener('touchend', endFocusAction);
+    focusView.addEventListener('click', (e) => {
+        if (window.getSelection().toString().length > 0) return;
+        const w = window.innerWidth; const x = e.clientX;
+        if (x > w * 0.3 && x < w * 0.7) Player.togglePlay(); else if (x < w * 0.3) Player.prevSub(); else Player.nextSub();
+    });
+    document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && !focusView.classList.contains('hidden')) focusView.classList.add('hidden'); });
+    
+    const Input = {
+        btns: {}, 
+        init() {
+            document.addEventListener('keydown', e => {
+                if (document.getElementById('view-player').classList.contains('hidden')) return;
+                const k = e.code;
+                if(k==='Space' || k==='KeyW') { e.preventDefault(); Player.togglePlay(); }
+                else if(k==='KeyA' || k==='ArrowLeft') Player.prevSub();
+                else if(k==='KeyD' || k==='ArrowRight') Player.nextSub();
+                else if(k==='KeyS' || k==='ArrowDown') { e.preventDefault(); Player.replaySub(); }
+                else if(k==='KeyQ' || k==='PageUp') Player.prevChap();
+                else if(k==='KeyE' || k==='PageDown') Player.nextChap();
+                else if(k==='KeyF') App.toggleFocusMode();
+                else if(k==='Escape' && !document.getElementById('view-focus').classList.contains('hidden')) { App.toggleFocusMode(); }
+            });
+            window.addEventListener("gamepadconnected", () => requestAnimationFrame(this.poll.bind(this)));
+        },
+        poll() {
+            const gp = navigator.getGamepads()[0];
+            if (gp) {
+                this.checkBtn(gp, 0, () => Player.togglePlay()); this.checkBtn(gp, 3, () => App.toggleFocusMode());
+                this.checkBtn(gp, 14, () => Player.prevSub()); this.checkBtn(gp, 15, () => Player.nextSub());
+                this.checkBtn(gp, 13, () => Player.replaySub()); this.checkBtn(gp, 4, () => Player.prevChap());
+                this.checkBtn(gp, 5, () => Player.nextChap()); this.checkBtn(gp, 7, () => Player.nextChap());
+                const axisX = gp.axes[0], axisY = gp.axes[1];
+                if (axisX < -0.5) this.triggerAxis('axLeft', () => Player.prevSub()); else if (axisX > 0.5) this.triggerAxis('axRight', () => Player.nextSub()); else { this.btns['axLeft'] = false; this.btns['axRight'] = false; }
+                if (axisY > 0.5) this.triggerAxis('axDown', () => Player.replaySub()); else this.btns['axDown'] = false;
             }
-        } else { this.audio.currentTime = Math.max(0, this.audio.currentTime - 5); }
-    },
-    prevChap() {
-        const chaps = this.meta.chapters || [];
-        if(chaps.length === 0) return;
-        const t = this.audio.currentTime;
-        
-        let idx = -1;
-        for(let i=0; i<chaps.length; i++) { 
-            if(t >= this.getChapTime(chaps[i])) idx = i; else break; 
-        }
-
-        if (idx === -1) {
-            if (t > 5) { this.audio.currentTime = 0; return; }
-            return;
-        }
-
-        const currStart = this.getChapTime(chaps[idx]);
-        if (t > currStart + 3) { 
-            this.audio.currentTime = currStart; 
-        } else {
-            if (idx > 0) {
-                this.audio.currentTime = this.getChapTime(chaps[idx-1]);
-            } else {
-                this.audio.currentTime = 0;
-            }
-        }
-    },
-    nextChap() {
-        const chaps = this.meta.chapters || [];
-        if(chaps.length === 0) return;
-        const t = this.audio.currentTime;
-        let target = -1;
-        for(let i=0; i<chaps.length; i++) if(this.getChapTime(chaps[i]) > t) { target = i; break; }
-        if (target > -1) this.audio.currentTime = this.getChapTime(chaps[target]);
-    },
-    updateBtn() { this.elBtnPlay.textContent = this.audio.paused ? "▶" : "❚❚"; },
-    save() {
-        if (!this.meta) return;
-        this.meta.progress = this.audio.currentTime;
-        this.meta.lastPlayed = Date.now();
-        DB.saveMetadata(this.meta);
-    },
-    isSeeking: false
-};
-
-const seekBar = document.getElementById('seek-bar');
-const seekFill = document.getElementById('seek-fill');
-seekBar.addEventListener('mousedown', () => Player.isSeeking = true);
-seekBar.addEventListener('touchstart', () => Player.isSeeking = true);
-seekBar.addEventListener('change', (e) => { 
-    Player.audio.currentTime = e.target.value; 
-    Player.isSeeking = false; 
-    if(Player.audio.duration) seekFill.style.width = (Player.audio.currentTime / Player.audio.duration * 100) + "%";
-});
-seekBar.addEventListener('input', (e) => {
-    document.getElementById('t-curr').textContent = App.fmtTime(e.target.value);
-    if(Player.audio.duration) seekFill.style.width = (e.target.value / Player.audio.duration * 100) + "%";
-});
-
-const focusView = document.getElementById('view-focus');
-let longPressTimer;
-const startFocusAction = () => { longPressTimer = setTimeout(() => App.toggleFocusMode(), 1000); };
-const endFocusAction = () => clearTimeout(longPressTimer);
-focusView.addEventListener('mousedown', startFocusAction);
-focusView.addEventListener('mouseup', endFocusAction);
-focusView.addEventListener('touchstart', startFocusAction);
-focusView.addEventListener('touchend', endFocusAction);
-focusView.addEventListener('click', (e) => {
-    if (window.getSelection().toString().length > 0) return;
-    const w = window.innerWidth;
-    const x = e.clientX;
-    if (x > w * 0.3 && x < w * 0.7) Player.togglePlay();
-    else if (x < w * 0.3) Player.prevSub();
-    else Player.nextSub();
-});
-document.addEventListener('fullscreenchange', () => {
-    if (!document.fullscreenElement && !focusView.classList.contains('hidden')) { focusView.classList.add('hidden'); }
-});
-
-const Input = {
-    btns: {}, 
-    init() {
-        document.addEventListener('keydown', e => {
-            if (document.getElementById('view-player').classList.contains('hidden')) return;
-            const k = e.code;
-            if(k==='Space' || k==='KeyW') { e.preventDefault(); Player.togglePlay(); }
-            else if(k==='KeyA' || k==='ArrowLeft') Player.prevSub();
-            else if(k==='KeyD' || k==='ArrowRight') Player.nextSub();
-            else if(k==='KeyS' || k==='ArrowDown') { e.preventDefault(); Player.replaySub(); }
-            else if(k==='KeyQ' || k==='PageUp') Player.prevChap();
-            else if(k==='KeyE' || k==='PageDown') Player.nextChap();
-            else if(k==='KeyF') App.toggleFocusMode();
-            else if(k==='Escape' && !document.getElementById('view-focus').classList.contains('hidden')) { App.toggleFocusMode(); }
-        });
-        window.addEventListener("gamepadconnected", () => requestAnimationFrame(this.poll.bind(this)));
-    },
-    poll() {
-        const gp = navigator.getGamepads()[0];
-        if (gp) {
-            this.checkBtn(gp, 0, () => Player.togglePlay()); 
-            this.checkBtn(gp, 3, () => App.toggleFocusMode());
-            this.checkBtn(gp, 14, () => Player.prevSub());
-            this.checkBtn(gp, 15, () => Player.nextSub());
-            this.checkBtn(gp, 13, () => Player.replaySub());
-            this.checkBtn(gp, 4, () => Player.prevChap());
-            this.checkBtn(gp, 5, () => Player.nextChap());
-            this.checkBtn(gp, 7, () => Player.nextChap());
-            const axisX = gp.axes[0];
-            const axisY = gp.axes[1];
-            if (axisX < -0.5) this.triggerAxis('axLeft', () => Player.prevSub());
-            else if (axisX > 0.5) this.triggerAxis('axRight', () => Player.nextSub());
-            else { this.btns['axLeft'] = false; this.btns['axRight'] = false; }
-            if (axisY > 0.5) this.triggerAxis('axDown', () => Player.replaySub());
-            else this.btns['axDown'] = false;
-        }
-        requestAnimationFrame(this.poll.bind(this));
-    },
-    checkBtn(gp, idx, cb) { if (gp.buttons[idx] && gp.buttons[idx].pressed) { if (!this.btns[idx]) { this.btns[idx] = true; cb(); } } else { this.btns[idx] = false; } },
-    triggerAxis(key, cb) { if (!this.btns[key]) { this.btns[key] = true; cb(); } }
-};
-App.init();
-</script>
-</body>
-</html>
+            requestAnimationFrame(this.poll.bind(this));
+        },
+        checkBtn(gp, idx, cb) { if (gp.buttons[idx] && gp.buttons[idx].pressed) { if (!this.btns[idx]) { this.btns[idx] = true; cb(); } } else { this.btns[idx] = false; } },
+        triggerAxis(key, cb) { if (!this.btns[key]) { this.btns[key] = true; cb(); } }
+    };
+    App.init();
+    </script>
+    
+    </body>
+    </html>
