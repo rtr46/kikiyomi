@@ -10,7 +10,8 @@
 - **subtitle support:** drag and drop .srt files alongside your audio.
 - **gap filling:** automatically displays the previous line during silence.
 - **gamepad support:** control playback with a game controller.
-![home_screenshot](https://github.com/user-attachments/assets/a85130e2-1fab-4253-9900-222c2460a370)
+
+![home_screenshot](https://github.com/user-attachments/assets/0e5780e1-e62a-42c2-93c2-9cacb789c081)
 
 ## how to use
 
