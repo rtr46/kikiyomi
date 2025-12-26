@@ -12,7 +12,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <style>
         :root { 
-            --bg: #121212; --surface: #1e1e1e; --primary: #bb86fc; --text: #b0b0b0; --text-active: #ffffff; --sec: #03dac6; 
+            --bg: #121212; --surface: #1e1e1e; --primary: #bb86fc; --text: #b0b0b0; --text-active: #ffffff; --sec: #03dac6; --warn: #ffb74d;
             --font-ui: system-ui, -apple-system, sans-serif;
             --font-reader: system-ui, -apple-system, sans-serif;
             --font-size-base: 36px;
@@ -36,14 +36,14 @@
         .icon-btn:hover { color: #fff; }
         .del-btn { color: #555; font-size: 1.2rem; padding: 0 15px; cursor: pointer; background: transparent; border:none; height: 100%; display: flex; align-items: center; }
         .del-btn:hover { color: #ff5555; }
-    
+        
         /* --- MODALS --- */
         .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index: 200; display:flex; justify-content:center; align-items:center; backdrop-filter: blur(2px); }
-        .modal { background: var(--surface); padding: 25px; border-radius: 12px; width: 90%; max-width: 450px; border: 1px solid #333; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .modal { background: var(--surface); padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; border: 1px solid #333; box-shadow: 0 10px 25px rgba(0,0,0,0.5); max-height: 85vh; display: flex; flex-direction: column; }
         .setting-row { margin-bottom: 20px; display:flex; justify-content: space-between; align-items: center; }
         .setting-row label { color: #e0e0e0; font-size: 0.9rem; flex: 1; }
         .setting-input-group { flex: 1; display:flex; justify-content: flex-end; align-items: center; gap: 10px; }
-        select, input[type=number] { padding: 8px; background: #121212; border: 1px solid #333; color: #fff; border-radius: 4px; }
+        select, input[type=number] { padding: 8px; background: #121212; border: 1px solid #333; color: #fff; border-radius: 4px; max-width: 100%; }
         
         #loading-overlay { z-index: 300; flex-direction: column; }
         .spinner { width: 50px; height: 50px; border: 5px solid #333; border-top: 5px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
@@ -53,7 +53,19 @@
         .key-table td { padding: 8px 0; border-bottom: 1px solid #333; }
         .key-table td:first-child { color: var(--primary); font-weight: bold; }
         .key-table td:last-child { text-align: right; color: #aaa; }
-    
+        
+        /* Bookmarks Modal */
+        .bm-filter-row { margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 15px; }
+        #bm-list { overflow-y: auto; margin: 0; flex: 1; min-height: 200px; }
+        .bm-item { padding: 12px; border-bottom: 1px solid #252525; cursor: pointer; display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: start; }
+        .bm-item:hover { background: #252525; }
+        .bm-content { display: flex; flex-direction: column; gap: 5px; overflow: hidden; }
+        .bm-text { color: #e0e0e0; font-size: 0.95rem; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .bm-meta { font-size: 0.75rem; color: #666; display: flex; justify-content: space-between; gap: 10px; }
+        .bm-book-title { color: var(--primary); font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+        .bm-del-btn { color: #666; background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 5px 10px; }
+        .bm-del-btn:hover { color: #ff5555; background: #333; border-radius: 4px; }
+
         /* --- VIEW: LIBRARY --- */
         #view-library { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; max-width: 800px; margin: 0 auto; width: 100%; }
         
@@ -66,29 +78,23 @@
         .lib-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-radius: 8px; background: #252525; border: 1px solid #333; cursor: pointer; transition: transform 0.1s, background 0.2s; height: 80px; overflow: hidden; }
         .lib-item:hover { background: #2a2a2a; }
         .lib-item:active { transform: scale(0.99); }
-        
         .lib-item.active-book { border: 2px solid var(--primary); background: #2d2036; }
-
         .lib-cover { width: 60px; height: 60px; background: #111; border-radius: 4px; object-fit: cover; margin-right: 15px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #333; }
-        
         .lib-info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
         .lib-title { font-weight: bold; font-size: 1rem; margin-bottom: 5px; color: #e0e0e0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .lib-meta { color:#888; font-size:0.75rem; display: flex; align-items: center; gap: 6px; }
-        
         .progress-bar-mini { height: 4px; background: #111; width: 100%; margin-top: 8px; border-radius: 2px; }
         .progress-fill-mini { height: 100%; background: var(--sec); width: 0%; border-radius: 2px; }
-        
         .badge { background: #111; color: #aaa; padding: 2px 5px; border-radius: 3px; font-size: 0.65rem; border: 1px solid #444; text-transform: uppercase; letter-spacing: 0.5px; }
         .badge.cached { border-color: var(--sec); color: var(--sec); }
         .badge.linked { border-color: #4a9eff; color: #4a9eff; }
         .badge.playing { border-color: var(--primary); color: var(--primary); font-weight: bold; }
-
         .version-footer { margin-top: auto; padding-top: 20px; color: #444; font-size: 0.8rem; font-family: monospace; }
 
         /* --- VIEW: PLAYER --- */
         #view-player { flex: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; position: relative; }
         
-        header { height: 60px; padding: 0 20px; background: var(--surface); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #333; z-index: 50; flex-shrink: 0; position: relative; }
+        header { height: 60px; padding: 0 10px; background: var(--surface); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #333; z-index: 50; flex-shrink: 0; position: relative; }
         #player-title-container { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; pointer-events: none; }
         #player-title { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 40%; font-size: 0.9rem; color:#888; pointer-events: auto; }
         
@@ -98,9 +104,59 @@
         
         /* Subtitles List */
         #sub-list { flex: 1; overflow-y: auto; padding: 50vh 0; margin: 0; list-style: none; scroll-behavior: auto; background: #121212; position: relative; }
-        #sub-list li { padding: 15px 20px; color: #555; cursor: pointer; font-size: var(--font-size-base); font-family: var(--font-reader); line-height: 1.5; text-align: center; transition: color 0.1s, transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); max-width: 95%; margin: 0 auto; transform-origin: center center; user-select: text; -webkit-user-select: text; text-wrap: balance; }
+        #sub-list li { 
+            /* Grid Layout for stability: Star | Text */
+            display: grid; 
+            grid-template-columns: 50px 1fr; 
+            align-items: center;
+            min-height: 1.5em;
+            padding: 15px 0; /* Padding vertical only */
+            margin: 0 auto; 
+            max-width: 95%;
+            color: #555; 
+            cursor: pointer; 
+            font-size: var(--font-size-base); 
+            font-family: var(--font-reader); 
+            line-height: 1.5; 
+            user-select: text; -webkit-user-select: text; 
+        }
+        
+        #sub-list li .text-container {
+            text-align: center;
+            text-wrap: balance;
+            transition: color 0.1s, transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); 
+            transform-origin: center center;
+        }
+
         #sub-list li:hover { color: #888; }
-        #sub-list li.active { color: var(--text-active); font-weight: var(--active-weight); transform: scale(var(--active-scale)); text-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        
+        /* Active State: Scale only the text container */
+        #sub-list li.active .text-container { 
+            color: var(--text-active); 
+            font-weight: var(--active-weight); 
+            transform: scale(var(--active-scale)); 
+            text-shadow: 0 0 20px rgba(0,0,0,0.5); 
+        }
+        
+        /* Bookmark Star */
+        .star-col {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+        .star-btn { 
+            font-size: 1.5rem; 
+            color: #333; 
+            cursor: pointer; 
+            padding: 5px; 
+            opacity: 0.5;
+            transition: color 0.2s, opacity 0.2s;
+            user-select: none;
+        }
+        #sub-list li:hover .star-btn { color: #666; opacity: 1; }
+        .star-btn:hover { color: var(--warn) !important; opacity: 1 !important; transform: scale(1.1); }
+        .star-btn.filled { opacity: 1; color: var(--warn); }
         
         /* Empty State SRT Upload */
         .srt-empty-container { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; width: 100%; padding: 40px; box-sizing: border-box; }
@@ -154,7 +210,8 @@
     
         @media (max-width: 600px) {
             #chapter-list { width: 85%; }
-            #sub-list li.active { transform: scale(var(--active-scale)); }
+            #sub-list li.active { transform: none; /* Mobile scale handling override if needed */ }
+            #sub-list li.active .text-container { transform: scale(var(--active-scale)); }
         }
     </style>
     </head>
@@ -196,6 +253,24 @@
         </div>
     </div>
     
+    <!-- BOOKMARKS MODAL -->
+    <div id="modal-bookmarks" class="modal-overlay hidden" onclick="if(event.target===this) App.toggleModal('modal-bookmarks')">
+        <div class="modal">
+            <h2 style="margin-top:0; color: var(--warn);">Bookmarks</h2>
+            <div class="bm-filter-row">
+                <select id="bm-filter" style="width:100%" onchange="App.renderBookmarkList()">
+                    <option value="all">All Books</option>
+                    <option value="current">Current Book</option>
+                </select>
+            </div>
+            <div id="bm-list"></div>
+            <div style="text-align: right; margin-top:10px; display:flex; justify-content:space-between;">
+                <button class="btn" onclick="App.exportBookmarks()">Export CSV</button>
+                <button class="btn btn-primary" onclick="App.toggleModal('modal-bookmarks')">Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- HELP -->
     <div id="modal-help" class="modal-overlay hidden" onclick="if(event.target===this) App.toggleModal('modal-help')">
         <div class="modal">
@@ -227,7 +302,7 @@
 
         <h3 style="align-self: flex-start; margin-bottom: 10px; color: #555; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Library</h3>
         <div id="library-list"></div>
-        <div class="version-footer">v0.0.3</div>
+        <div class="version-footer">v0.0.4</div>
     </div>
     
     <!-- PLAYER -->
@@ -238,6 +313,7 @@
                 <div id="player-title">...</div>
             </div>
             <div style="display:flex; align-items: center; z-index: 2;">
+                <button class="btn" onclick="App.showBookmarks()" style="margin-right:5px">★</button>
                 <button class="btn" onclick="App.toggleChapters()" style="margin-right:5px">Chapters</button>
                 <button class="btn" onclick="App.toggleFocusMode()" style="margin-right:5px">Focus</button>
                 <button class="icon-btn" onclick="App.toggleModal('modal-settings')" title="Settings">⚙</button>
@@ -493,7 +569,6 @@
                     while(ptr<size && view.getUint8(ptr)===0) ptr++; 
                     meta.cover = { blob: file.slice(pos+10+ptr, pos+10+size), mime: mime || 'image/jpeg' };
                 } else if (id === 'TIT2') {
-                    // Simple text tag read (assuming ISO or UTF-8 simple for PoC)
                     const fBuf = await Utils.read(file, pos+10, size);
                     const dec = new TextDecoder('utf-8');
                     meta.tags.Title = dec.decode(new Uint8Array(fBuf.buffer).slice(1)).replace(/\0/g,'');
@@ -575,10 +650,8 @@
             document.body.addEventListener('dragover', () => dz.classList.add('dragover'));
             document.body.addEventListener('dragleave', () => dz.classList.remove('dragover'));
             
-            // Fixed Chrome Drop Logic
             document.body.addEventListener('drop', async (e) => {
                 dz.classList.remove('dragover');
-                // Map items to promises immediately to prevent token expiration
                 const filePromises = [...e.dataTransfer.items]
                     .filter(item => item.kind === 'file')
                     .map(async (item) => {
@@ -703,6 +776,127 @@
                 list.innerHTML = '<div style="text-align:center; padding:20px; color:#444;">Library is empty</div>';
             }
         },
+        async showBookmarks() {
+            document.getElementById('modal-bookmarks').classList.remove('hidden');
+            const select = document.getElementById('bm-filter');
+            
+            // Populate Dropdown
+            const books = await DB.getAllMetadata();
+            select.innerHTML = `<option value="all">All Books</option>`;
+            
+            // If current book exists, add it as separate option first
+            if(this.currentBook) {
+                select.innerHTML += `<option value="current" selected>Current Book</option>`;
+            }
+            
+            // Add other books
+            books.forEach(b => {
+                if(this.currentBook && b.id === this.currentBook.id) return;
+                select.innerHTML += `<option value="${b.id}">${b.title}</option>`;
+            });
+
+            this.renderBookmarkList();
+        },
+        async renderBookmarkList() {
+            const list = document.getElementById('bm-list');
+            list.innerHTML = '<div class="spinner" style="margin:20px auto;"></div>';
+            
+            const filter = document.getElementById('bm-filter').value;
+            const books = await DB.getAllMetadata();
+            let bookmarks = [];
+            
+            books.forEach(b => {
+                // Filter logic
+                if(filter === 'current' && this.currentBook && b.id !== this.currentBook.id) return;
+                if(filter !== 'all' && filter !== 'current' && b.id !== filter) return;
+
+                if(b.bookmarks && b.bookmarks.length > 0) {
+                    b.bookmarks.forEach(bm => {
+                        bookmarks.push({ ...bm, bookId: b.id, bookTitle: b.title });
+                    });
+                }
+            });
+            
+            // Sort by creation time (newest first)
+            bookmarks.sort((a,b) => b.created - a.created);
+            this.currentExportData = bookmarks;
+            
+            list.innerHTML = '';
+            if(bookmarks.length === 0) {
+                list.innerHTML = '<div style="padding:20px; text-align:center; color:#666;">No bookmarks found.</div>';
+                return;
+            }
+            
+            bookmarks.forEach(bm => {
+                const el = document.createElement('div');
+                el.className = 'bm-item';
+                el.innerHTML = `
+                    <div class="bm-content" onclick="App.handleBmClick('${bm.bookId}', ${bm.start})">
+                        <div class="bm-text">"${bm.text}"</div>
+                        <div class="bm-meta">
+                            <span class="bm-book-title">${bm.bookTitle}</span>
+                            <span>${Utils.fmtTime(bm.start)}</span>
+                        </div>
+                    </div>
+                    <button class="bm-del-btn" onclick="App.deleteBookmark('${bm.bookId}', ${bm.start}, event)">×</button>
+                `;
+                list.appendChild(el);
+            });
+        },
+        handleBmClick(bookId, time) {
+            this.toggleModal('modal-bookmarks');
+            this.jumpToBookmark(bookId, time);
+        },
+        async deleteBookmark(bookId, start, event) {
+            event.stopPropagation();
+            if(!confirm("Delete this bookmark?")) return;
+            
+            const books = await DB.getAllMetadata();
+            const book = books.find(b => b.id === bookId);
+            if(book && book.bookmarks) {
+                book.bookmarks = book.bookmarks.filter(bm => bm.start !== start);
+                await DB.saveMetadata(book);
+                
+                // If this is the current book active in player, update state
+                if(this.currentBook && this.currentBook.id === bookId) {
+                    this.currentBook = book;
+                    Player.meta = book;
+                    Player.renderSubs(); // Re-render to remove star from UI
+                }
+                
+                this.renderBookmarkList();
+            }
+        },
+        async exportBookmarks() {
+            if(!this.currentExportData || this.currentExportData.length === 0) return alert("No bookmarks to export.");
+            const header = ["Book Title", "Text", "Time Start", "Time End", "Created Date"];
+            const rows = this.currentExportData.map(bm => [
+                `"${bm.bookTitle.replace(/"/g, '""')}"`,
+                `"${bm.text.replace(/"/g, '""')}"`,
+                bm.start,
+                bm.end,
+                new Date(bm.created).toISOString()
+            ]);
+            
+            const csvContent = [header.join(","), ...rows.map(r => r.join(","))].join("\n");
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", "kikiyomi_bookmarks.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        },
+        async jumpToBookmark(bookId, time) {
+            // If already in the correct book, just seek
+            if(this.currentBook && this.currentBook.id === bookId) {
+                Player.audio.currentTime = time;
+                return;
+            }
+            // Otherwise load the book then seek
+            await this.loadBookFromHistory(bookId, time);
+        },
         async handleFiles(files) {
             document.getElementById('loading-overlay').classList.remove('hidden');
             setTimeout(async () => {
@@ -721,10 +915,11 @@
                         if (!meta) {
                             meta = {
                                 id: id, title: audioFile.name.replace(/\.(mp3|m4b|aac|mp4|m4a)$/i, ''),
-                                duration: 0, progress: 0, lastPlayed: Date.now(), subs: [], chapters: [], cover: null
+                                duration: 0, progress: 0, lastPlayed: Date.now(), subs: [], chapters: [], bookmarks: [], cover: null
                             };
                         }
                         if (audioFile.handle) meta.handle = audioFile.handle;
+                        if (!meta.bookmarks) meta.bookmarks = []; // Schema migration
                         
                         let parsed = {};
                         if (getExt(audioFile.name) === 'mp3') parsed = await ID3Parser.parse(audioFile);
@@ -743,7 +938,7 @@
                         this.currentBook = meta;
                         this.activeAudioBlob = audioFile;
                         this.launchPlayer();
-                    } else if (srtFile) { alert("Please drop the audio file too, or use +CC button in player."); }
+                    } else if (srtFile) { alert("Please drop the audio file too, or drag the .srt file into the player once the audio is loaded."); }
                     else { alert("Please drop the Audio File."); }
                 } catch (e) { console.error(e); alert("Error processing file."); } 
                 finally { document.getElementById('loading-overlay').classList.add('hidden'); }
@@ -762,15 +957,21 @@
                 alert("Subtitles loaded!");
             } catch(e) { alert("Failed to parse SRT"); }
         },
-        async loadBookFromHistory(id) {
+        async loadBookFromHistory(id, seekTo = null) {
             const books = await DB.getAllMetadata();
             const book = books.find(b => b.id === id);
             if(!book) return;
             
+            // Ensure schema
+            if(!book.bookmarks) book.bookmarks = [];
+
             const activeId = localStorage.getItem('activeBookId');
             if (activeId === book.id) {
                 const blob = await DB.getActiveAudio();
-                if (blob) { this.currentBook = book; this.activeAudioBlob = blob; this.launchPlayer(); return; }
+                if (blob) { 
+                    this.currentBook = book; this.activeAudioBlob = blob; 
+                    this.launchPlayer(seekTo); return; 
+                }
             }
     
             if (book.handle) {
@@ -783,17 +984,19 @@
                         localStorage.setItem('activeBookId', book.id);
                         this.currentBook = book;
                         this.activeAudioBlob = file;
-                        this.launchPlayer();
+                        this.launchPlayer(seekTo);
                         return;
                     }
                 } catch (e) { console.warn(e); }
             }
     
             this.pendingBookId = id;
+            this.pendingSeek = seekTo;
             document.getElementById('req-filename').textContent = book.title + " (Audio File)";
             document.getElementById('modal-file-req').classList.remove('hidden');
         },
         pendingBookId: null,
+        pendingSeek: null,
         triggerFileSelect() {
             document.getElementById('modal-file-req').classList.add('hidden');
             document.getElementById('file-input').click();
@@ -806,25 +1009,10 @@
             if(activeId === id) { await DB.clearActive(); localStorage.removeItem('activeBookId'); }
             this.renderLibrary();
         },
-        async deleteActive(event) {
-            event.stopPropagation();
-            if(!confirm("Clear active resume data?")) return;
-            await DB.clearActive();
-            localStorage.removeItem('activeBookId');
-            this.renderLibrary();
-        },
-        async resumeActive() {
-            const activeId = localStorage.getItem('activeBookId');
-            if(!activeId) return;
-            const all = await DB.getAllMetadata();
-            const meta = all.find(b => b.id === activeId);
-            const blob = await DB.getActiveAudio();
-            if(meta && blob) { this.currentBook = meta; this.activeAudioBlob = blob; this.launchPlayer(); }
-        },
-        launchPlayer() {
+        launchPlayer(seekTo = null) {
             document.getElementById('view-library').classList.add('hidden');
             document.getElementById('view-player').classList.remove('hidden');
-            Player.load(this.currentBook, this.activeAudioBlob);
+            Player.load(this.currentBook, this.activeAudioBlob, seekTo);
         },
         showLibrary() {
             Player.pause();
@@ -869,11 +1057,13 @@
         elBtnPlay: document.getElementById('btn-play'), elFocusText: document.getElementById('focus-text'),
         elChapList: document.getElementById('chapter-list'),
     
-        load(meta, blob) {
+        load(meta, blob, seekTo = null) {
             this.meta = meta; this.subs = meta.subs || [];
+            if(!this.meta.bookmarks) this.meta.bookmarks = [];
+            
             this.elTitle.textContent = meta.title;
             this.audio.src = URL.createObjectURL(blob);
-            this.audio.currentTime = meta.progress || 0;
+            this.audio.currentTime = seekTo !== null ? seekTo : (meta.progress || 0);
             
             this.renderSubs(); this.renderChapters();
             this.audio.onloadedmetadata = () => {
@@ -881,6 +1071,7 @@
                 this.elTTotal.textContent = Utils.fmtTime(this.audio.duration);
                 if (this.meta.duration !== this.audio.duration) { this.meta.duration = this.audio.duration; this.save(); }
                 this.renderMarkers();
+                if(seekTo !== null) this.audio.currentTime = seekTo; // Ensure seek
             };
             this.audio.ontimeupdate = () => {
                 if (!this.isSeeking) { 
@@ -902,7 +1093,7 @@
                         <div class="srt-empty" onclick="if('showOpenFilePicker' in window){App.pickFile()}else{document.getElementById('file-input').click()}">
                             <div class="srt-empty-icon">📝</div>
                             <div style="font-weight:bold; font-size:1.2rem; margin-bottom:5px;">No Subtitles Loaded</div>
-                            <div style="font-size:0.9rem;">Drop .srt file or click to add</div>
+                            <div style="font-size:0.9rem;">Drop .srt file here or click to add</div>
                         </div>
                     </div>`; 
                 const emptyZone = this.elSubList.querySelector('.srt-empty');
@@ -911,13 +1102,56 @@
                 emptyZone.addEventListener('drop', e => { e.preventDefault(); e.stopPropagation(); if(e.dataTransfer.files.length > 0) App.handleSrtUpload(e.dataTransfer.files[0]); });
                 return; 
             }
+            
             const frag = document.createDocumentFragment();
+            const bookmarkedIndices = new Set(this.meta.bookmarks.map(b => b.subIndex));
+
             this.subs.forEach((s, i) => {
-                const li = document.createElement('li'); li.textContent = s.text; li.id = `s-${i}`;
-                li.onclick = () => { this.audio.currentTime = s.start + 0.001; this.audio.play(); };
+                const li = document.createElement('li'); 
+                li.id = `s-${i}`;
+                
+                // --- Star Column ---
+                const starCol = document.createElement('div');
+                starCol.className = 'star-col';
+                const star = document.createElement('div');
+                star.className = 'star-btn';
+                star.textContent = '★';
+                if(bookmarkedIndices.has(i)) star.classList.add('filled');
+                star.onclick = (e) => { e.stopPropagation(); this.toggleBookmark(i, star); };
+                starCol.appendChild(star);
+                li.appendChild(starCol);
+
+                // --- Text Column ---
+                const txtCol = document.createElement('div');
+                txtCol.className = 'text-container';
+                txtCol.textContent = s.text;
+                li.appendChild(txtCol);
+                
+                // Click Behavior: Just Seek
+                li.onclick = () => { 
+                    this.audio.currentTime = s.start + 0.001;
+                };
                 frag.appendChild(li);
             });
             this.elSubList.appendChild(frag);
+        },
+        toggleBookmark(index, starEl) {
+            const existsIdx = this.meta.bookmarks.findIndex(b => b.subIndex === index);
+            if(existsIdx > -1) {
+                this.meta.bookmarks.splice(existsIdx, 1);
+                starEl.classList.remove('filled');
+            } else {
+                const s = this.subs[index];
+                this.meta.bookmarks.push({
+                    subIndex: index,
+                    text: s.text,
+                    start: s.start,
+                    end: s.end,
+                    created: Date.now()
+                });
+                starEl.classList.add('filled');
+            }
+            this.save();
         },
         getChapTime(c) {
             if (c.start !== undefined) return Number(c.start);
@@ -1087,6 +1321,5 @@
     };
     App.init();
     </script>
-    
     </body>
     </html>
